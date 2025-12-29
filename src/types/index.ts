@@ -1,4 +1,4 @@
-export type ProjectStatus = 
+export type ProjectStatus =
   | 'initializing'
   | 'active'
   | 'paused'
@@ -15,20 +15,20 @@ export interface Project {
   createdAt: string;             // ISO Date
   updatedAt: string;             // ISO Date
   maxRuntime: number;            // Milliseconds (default: 12 hours)
-  
+
   // Git information
   baseBranch: string;            // e.g., "main"
   workBranch: string;            // e.g., "df/feature-auth/2025-12-26"
   worktreePath: string;          // Absolute path to worktree
-  
+
   // Personas
   personas: PersonaConfig[];     // Active personas for this project
-  
+
   // Parent/child relationships (for decision branches)
   parentProjectId?: string;
   childProjectIds: string[];
   decisionContext?: DecisionContext;
-  
+
   // Metrics
   totalCost: number;             // USD
   tokensUsed: number;
@@ -64,7 +64,7 @@ export interface DecisionContext {
 }
 
 // Task List Schema
-export type TaskStatus = 
+export type TaskStatus =
   | 'pending'
   | 'in_progress'
   | 'blocked'
@@ -86,11 +86,11 @@ export interface Task {
   priority: number;              // 1-5, 1 = highest
   dependencies: string[];        // Task IDs that must complete first
   assignedPersona?: string;      // Which persona is working on this
-  
+
   createdAt: string;             // ISO Date
   startedAt?: string;            // ISO Date
   completedAt?: string;          // ISO Date
-  
+
   // Audit trail
   completionConfidence: number;  // 0-1, how confident we are it's done
   lastVerifiedAt?: string;       // ISO Date
@@ -98,7 +98,7 @@ export interface Task {
 }
 
 // Finance State Schema
-export type SwitchReason = 
+export type SwitchReason =
   | 'credits_exhausted'
   | 'rate_limit'
   | 'api_error'
@@ -110,12 +110,12 @@ export interface FinanceState {
   providers: ProviderConfig[];
   currentProviderId: string;
   totalSpent: number;            // USD
-  
+
   // Polling state
   pollingMode: boolean;
   pollingInterval: number;       // Milliseconds
   lastProbeAt: string;           // ISO Date
-  
+
   // History
   providerSwitches: ProviderSwitch[];
   costHistory: CostEntry[];
@@ -126,18 +126,18 @@ export interface ProviderConfig {
   name: string;                  // "openai", "anthropic", etc.
   model?: string;                // "gpt-4", "claude-3-opus", etc.
   apiKey?: string;               // Encrypted or env var name
-  
+
   // New: Antigravity specific
   profile?: string;              // Antigravity Profile Name
-  
+
   // Limits
   creditsAvailable: number;      // USD
   rateLimit: RateLimit;
-  
+
   // Priority
   priority: number;              // Lower = preferred
   enabled: boolean;
-  
+
   // Health
   lastSuccessAt?: string;        // ISO Date
   lastFailureAt?: string;        // ISO Date
@@ -165,3 +165,16 @@ export interface CostEntry {
   cost: number;                  // USD
   operation: string;             // "chat", "noop_probe", etc.
 }
+
+// Alias for storage compatibility
+export type TaskItem = Task;
+
+// Simplified finance state for OpenCode-based storage
+export interface SimpleFinanceState {
+  totalCost: number;
+  totalTokens: number;
+  costByModel: Record<string, { tokens: number; cost: number }>;
+  currentModel: string;
+  lastUpdated: string;           // ISO Date
+}
+
