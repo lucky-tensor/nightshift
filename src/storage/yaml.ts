@@ -8,13 +8,9 @@
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from "fs";
 import { join } from "path";
-import { homedir } from "os";
-
-// Default storage directory
-const DEFAULT_STORAGE_DIR = join(homedir(), ".dark-factory");
 
 export interface StorageOptions {
-    baseDir?: string;
+    baseDir: string;
 }
 
 /**
@@ -26,8 +22,8 @@ export class YamlRepository<T> {
     private cache: Map<string, T> = new Map();
     private cacheValid = false;
 
-    constructor(filename: string, options: StorageOptions = {}) {
-        this.baseDir = options.baseDir || DEFAULT_STORAGE_DIR;
+    constructor(filename: string, options: StorageOptions) {
+        this.baseDir = options.baseDir;
         this.filename = filename;
         this.ensureDir();
     }
@@ -212,7 +208,7 @@ import type {
  * Project storage
  */
 export class ProjectRepository extends YamlRepository<ProjectSession> {
-    constructor(options: StorageOptions = {}) {
+    constructor(options: StorageOptions) {
         super("projects.yaml", options);
     }
 
@@ -231,9 +227,8 @@ export class ProjectRepository extends YamlRepository<ProjectSession> {
  * Task storage (per-project)
  */
 export class TaskRepository extends YamlRepository<TaskPrompt[]> {
-    constructor(projectId: string, options: StorageOptions = {}) {
-        const baseDir = options.baseDir || join(homedir(), ".dark-factory");
-        super(`tasks/${projectId}.yaml`, { baseDir });
+    constructor(projectId: string, options: StorageOptions) {
+        super(`tasks/${projectId}.yaml`, options);
     }
 
     getTasks(): TaskPrompt[] {
@@ -275,7 +270,7 @@ export class TaskRepository extends YamlRepository<TaskPrompt[]> {
  * Finance state storage (uses simplified state for OpenCode-based tracking)
  */
 export class FinanceRepository extends YamlRepository<SimpleFinanceState> {
-    constructor(options: StorageOptions = {}) {
+    constructor(options: StorageOptions) {
         super("finance.yaml", options);
     }
 
@@ -318,7 +313,7 @@ export class FinanceRepository extends YamlRepository<SimpleFinanceState> {
  * Factory storage (singleton state)
  */
 export class FactoryRepository extends YamlRepository<Factory> {
-    constructor(options: StorageOptions = {}) {
+    constructor(options: StorageOptions) {
         super("factory.yaml", options);
     }
 
@@ -335,7 +330,7 @@ export class FactoryRepository extends YamlRepository<Factory> {
  * Product storage
  */
 export class ProductRepository extends YamlRepository<Product> {
-    constructor(options: StorageOptions = {}) {
+    constructor(options: StorageOptions) {
         super("products.yaml", options);
     }
 
@@ -352,9 +347,8 @@ export class ProductRepository extends YamlRepository<Product> {
  * Plan storage (per-product)
  */
 export class PlanRepository extends YamlRepository<Plan> {
-    constructor(productId: string, options: StorageOptions = {}) {
-        const baseDir = options.baseDir || join(homedir(), ".dark-factory");
-        super(`plans/${productId}.yaml`, { baseDir });
+    constructor(productId: string, options: StorageOptions) {
+        super(`plans/${productId}.yaml`, options);
     }
 
     getPlan(): Plan | undefined {
@@ -385,9 +379,8 @@ export class PlanRepository extends YamlRepository<Plan> {
  * Knowledge Base storage (per-product)
  */
 export class KnowledgeBaseRepository extends YamlRepository<KnowledgeEntry[]> {
-    constructor(productId: string, options: StorageOptions = {}) {
-        const baseDir = options.baseDir || join(homedir(), ".dark-factory");
-        super(`knowledge/${productId}.yaml`, { baseDir });
+    constructor(productId: string, options: StorageOptions) {
+        super(`knowledge/${productId}.yaml`, options);
     }
 
     getEntries(): KnowledgeEntry[] {
@@ -427,8 +420,9 @@ export class StorageManager {
     private _planRepos: Map<string, PlanRepository> = new Map();
     private _knowledgeRepos: Map<string, KnowledgeBaseRepository> = new Map();
 
-    constructor(baseDir?: string) {
-        this.baseDir = baseDir || DEFAULT_STORAGE_DIR;
+    constructor(baseDir: string) {
+        if (!baseDir) throw new Error("Storage baseDir is required");
+        this.baseDir = baseDir;
     }
 
     get projects(): ProjectRepository {
@@ -511,9 +505,12 @@ export class StorageManager {
 let defaultStorage: StorageManager | null = null;
 
 export function getStorage(baseDir?: string): StorageManager {
-    if (!defaultStorage || baseDir) {
+    if (baseDir) {
         defaultStorage = new StorageManager(baseDir);
         defaultStorage.initialize();
+    }
+    if (!defaultStorage) {
+        throw new Error("Storage not initialized. Call getStorage(baseDir) first.");
     }
     return defaultStorage;
 }

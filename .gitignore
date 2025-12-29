@@ -46,3 +46,7 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# Test files (generated)
+*-debug.log
+*-test.log

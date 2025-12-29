@@ -1,213 +1,185 @@
-import { ProjectManager } from "../managers/project.js";
-import { TaskManager } from "../managers/task.js";
-import { FactoryManager } from "../managers/factory.js";
-import { AgentRuntime } from "../runtime/agent.js";
-import { resolveProjectId } from "../utils/helpers.js";
+import { tool } from "@opencode-ai/plugin";
+import { ProjectManager } from "../managers/project";
+import { TaskManager } from "../managers/task";
+import { FactoryManager } from "../managers/factory";
+import { AgentRuntime } from "../runtime/agent";
+import { resolveProjectId } from "../utils/helpers";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
-export interface ToolDefinition {
-    name: string;
-    description: string;
-    inputSchema: any;
-    handler: (args: any) => Promise<any>;
+export function createTools(
+    client: any,
+    directory: string,
+    projectManager: ProjectManager,
+    factoryManager: FactoryManager
+) {
+    return {
+        // Factory Tools
+        factory_init: tool({
+            description: "Initialize a new factory with configuration",
+            args: {
+                name: tool.schema.string(),
+                description: tool.schema.string(),
+                budgetLimit: tool.schema.number().optional(),
+                defaultModel: tool.schema.string().optional(),
+                path: tool.schema.string().optional(),
+            },
+            async execute(args) {
+                const factory = await factoryManager.initialize(args.name, args.description, {
+                    budgetLimit: args.budgetLimit || 100,
+                    defaultModel: args.defaultModel,
+                    path: args.path,
+                });
+                return JSON.stringify(factory, null, 2);
+            },
+        }),
+
+        factory_status: tool({
+            description:
+                "Get the current status of the factory (returns Markdown dashboard if available)",
+            args: {},
+            async execute() {
+                const storageDir = factoryManager.getStorageDir();
+                if (storageDir) {
+                    const statusPath = join(storageDir, "FACTORY_STATUS.md");
+                    if (existsSync(statusPath)) {
+                        return readFileSync(statusPath, "utf-8");
+                    }
+                }
+
+                const status = await factoryManager.getStatus();
+                return JSON.stringify(status, null, 2);
+            },
+        }),
+
+        factory_reset: tool({
+            description: "Force reset the factory state (use if stuck in inconsistency)",
+            args: {},
+            async execute() {
+                factoryManager.reset();
+                return "Factory state reset. You can now run factory_init again.";
+            },
+        }),
+
+        // Project Tools
+        create_project: tool({
+            description: "Create a new project with an isolated git worktree",
+            args: {
+                name: tool.schema.string(),
+                description: tool.schema.string(),
+            },
+            async execute(args) {
+                const project = await projectManager.createProject(args.name, args.description);
+                return JSON.stringify(project, null, 2);
+            },
+        }),
+
+        list_projects: tool({
+            description: "List all projects managed by the factory",
+            args: {},
+            async execute() {
+                const projects = projectManager.listProjects();
+                return JSON.stringify(projects, null, 2);
+            },
+        }),
+
+        delete_project: tool({
+            description: "Delete a project and its resources",
+            args: {
+                projectId: tool.schema.string(),
+            },
+            async execute(args) {
+                const projects = projectManager.listProjects();
+                const id = resolveProjectId(args.projectId, projects);
+                await projectManager.deleteProject(id);
+                return `Project ${id} deleted successfully.`;
+            },
+        }),
+
+        // Task Tools
+        add_task: tool({
+            description: "Add a task to a project",
+            args: {
+                projectId: tool.schema.string(),
+                title: tool.schema.string(),
+                description: tool.schema.string(),
+            },
+            async execute(args) {
+                const projects = projectManager.listProjects();
+                const id = resolveProjectId(args.projectId, projects);
+                const tm = new TaskManager();
+                const task = await tm.addTask(id, args.title, args.description);
+                return JSON.stringify(task, null, 2);
+            },
+        }),
+
+        list_tasks: tool({
+            description: "List all tasks for a specific project",
+            args: {
+                projectId: tool.schema.string(),
+            },
+            async execute(args) {
+                const projects = projectManager.listProjects();
+                const id = resolveProjectId(args.projectId, projects);
+                const tm = new TaskManager();
+                const tasks = tm.listTasks(id);
+                return JSON.stringify(tasks, null, 2);
+            },
+        }),
+
+        run_task: tool({
+            description: "Execute a task using an AI agent",
+            args: {
+                projectId: tool.schema.string(),
+                taskId: tool.schema.string().optional(),
+                subagent: tool.schema.string().optional(),
+            },
+            async execute(args) {
+                const tm = new TaskManager();
+                const runtime = new AgentRuntime(client);
+
+                const projects = projectManager.listProjects();
+                const projectId = resolveProjectId(args.projectId, projects);
+                const project = projectManager.getProject(projectId);
+
+                if (!project) throw new Error("Project not found");
+
+                let targetTask;
+                if (args.taskId) {
+                    const tasks = tm.listTasks(projectId);
+                    const matches = tasks.filter((t) => t.id.startsWith(args.taskId!));
+                    if (matches.length === 0) throw new Error("Task not found");
+                    targetTask = matches[0];
+                } else {
+                    const executable = tm.getExecutableTasks(projectId);
+                    if (executable.length === 0) return "No executable tasks found.";
+                    targetTask = executable[0];
+                }
+
+                if (!targetTask) {
+                    return "Failed to resolve task.";
+                }
+
+                await tm.updateTask(projectId, targetTask.id, {
+                    status: "in_progress",
+                    startedAt: new Date().toISOString(),
+                    assignedSubagent: args.subagent || "engineer",
+                });
+
+                const result = await runtime.runTask(
+                    project,
+                    targetTask,
+                    args.subagent || "engineer"
+                );
+
+                await tm.updateTask(projectId, targetTask.id, {
+                    status: result.success ? "completed" : "failed",
+                    completedAt: new Date().toISOString(),
+                    verificationNotes: [result.message],
+                });
+
+                return JSON.stringify(result, null, 2);
+            },
+        }),
+    };
 }
-
-const factoryTools: ToolDefinition[] = [
-    {
-        name: "factory_init",
-        description: "Initialize a new factory with configuration",
-        inputSchema: {
-            type: "object",
-            properties: {
-                name: { type: "string", description: "Name of the factory" },
-                description: {
-                    type: "string",
-                    description: "Description of the factory's purpose",
-                },
-                budgetLimit: { type: "number", description: "Budget limit in USD (default: 100)" },
-                defaultModel: { type: "string", description: "Default LLM model to use" },
-            },
-            required: ["name", "description"],
-        },
-        handler: async (args) => {
-            const fm = new FactoryManager();
-            const factory = await fm.initialize(args.name, args.description, {
-                budgetLimit: args.budgetLimit,
-                defaultModel: args.defaultModel,
-            });
-            return factory;
-        },
-    },
-    {
-        name: "factory_status",
-        description: "Get the current status of the factory including budget and products",
-        inputSchema: {
-            type: "object",
-            properties: {},
-        },
-        handler: async () => {
-            const fm = new FactoryManager();
-            return fm.getStatus();
-        },
-    },
-];
-
-const projectTools: ToolDefinition[] = [
-    {
-        name: "create_project",
-        description: "Create a new project with an isolated git worktree",
-        inputSchema: {
-            type: "object",
-            properties: {
-                name: { type: "string", description: "Project name" },
-                description: { type: "string", description: "Project description" },
-            },
-            required: ["name", "description"],
-        },
-        handler: async (args) => {
-            const pm = new ProjectManager(process.cwd());
-            return await pm.createProject(args.name, args.description);
-        },
-    },
-    {
-        name: "list_projects",
-        description: "List all projects managed by the factory",
-        inputSchema: {
-            type: "object",
-            properties: {},
-        },
-        handler: async () => {
-            const pm = new ProjectManager(process.cwd());
-            return pm.listProjects();
-        },
-    },
-    {
-        name: "delete_project",
-        description: "Delete a project and its resources",
-        inputSchema: {
-            type: "object",
-            properties: {
-                projectId: { type: "string", description: "Project ID or prefix" },
-            },
-            required: ["projectId"],
-        },
-        handler: async (args) => {
-            const pm = new ProjectManager(process.cwd());
-            const projects = pm.listProjects();
-            const id = resolveProjectId(args.projectId, projects);
-            await pm.deleteProject(id);
-            return { success: true, message: `Project ${id} deleted` };
-        },
-    },
-];
-
-const taskTools: ToolDefinition[] = [
-    {
-        name: "add_task",
-        description: "Add a task to a project",
-        inputSchema: {
-            type: "object",
-            properties: {
-                projectId: { type: "string", description: "Project ID or prefix" },
-                title: { type: "string", description: "Task title" },
-                description: { type: "string", description: "Task description" },
-            },
-            required: ["projectId", "title", "description"],
-        },
-        handler: async (args) => {
-            const pm = new ProjectManager(process.cwd());
-            const tm = new TaskManager();
-            const projects = pm.listProjects();
-            const id = resolveProjectId(args.projectId, projects);
-
-            return await tm.addTask(id, args.title, args.description);
-        },
-    },
-    {
-        name: "list_tasks",
-        description: "List all tasks for a specific project",
-        inputSchema: {
-            type: "object",
-            properties: {
-                projectId: { type: "string", description: "Project ID or prefix" },
-            },
-            required: ["projectId"],
-        },
-        handler: async (args) => {
-            const pm = new ProjectManager(process.cwd());
-            const tm = new TaskManager();
-            const projects = pm.listProjects();
-            const id = resolveProjectId(args.projectId, projects);
-
-            return tm.listTasks(id);
-        },
-    },
-    {
-        name: "run_task",
-        description: "Execute a task using an AI agent",
-        inputSchema: {
-            type: "object",
-            properties: {
-                projectId: { type: "string", description: "Project ID or prefix" },
-                taskId: {
-                    type: "string",
-                    description: "Task ID or prefix (optional, runs next executable)",
-                },
-                subagent: {
-                    type: "string",
-                    description: "Subagent to use (engineer, tester, etc.)",
-                    default: "engineer",
-                },
-            },
-            required: ["projectId"],
-        },
-        handler: async (args) => {
-            const pm = new ProjectManager(process.cwd());
-            const tm = new TaskManager();
-            const runtime = new AgentRuntime();
-
-            const projects = pm.listProjects();
-            const projectId = resolveProjectId(args.projectId, projects);
-            const project = pm.getProject(projectId);
-
-            if (!project) throw new Error("Project not found");
-
-            let targetTask;
-            if (args.taskId) {
-                const tasks = tm.listTasks(projectId);
-                const matches = tasks.filter((t) => t.id.startsWith(args.taskId));
-                if (matches.length === 0) throw new Error("Task not found");
-                targetTask = matches[0];
-            } else {
-                const executable = tm.getExecutableTasks(projectId);
-                if (executable.length === 0)
-                    return { success: false, message: "No executable tasks found" };
-                targetTask = executable[0];
-            }
-
-            if (!targetTask) {
-                return { success: false, message: "Failed to resolve task" };
-            }
-
-            // Update status to in_progress
-            await tm.updateTask(projectId, targetTask.id, {
-                status: "in_progress",
-                startedAt: new Date().toISOString(),
-                assignedSubagent: args.subagent || "engineer",
-            });
-
-            // Run agent
-            const result = await runtime.runTask(project, targetTask, args.subagent || "engineer");
-
-            // Update final status
-            await tm.updateTask(projectId, targetTask.id, {
-                status: result.success ? "completed" : "failed",
-                completedAt: new Date().toISOString(),
-                verificationNotes: [result.message],
-            });
-
-            return result;
-        },
-    },
-];
-
-export const tools: ToolDefinition[] = [...factoryTools, ...projectTools, ...taskTools];

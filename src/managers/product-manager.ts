@@ -70,13 +70,19 @@ export class ProductManager {
         const productId = uuid();
 
         // Determine product repository path
-        const repoPath = join(factory.outputDirectory, name);
+        // e.g. /output/my-project (Root)
+        const rootPath = join(factory.outputDirectory, name);
+        // e.g. /output/my-project/my-project-main (Repo)
+        const repoPath = join(rootPath, `${name}-main`);
 
-        if (existsSync(repoPath)) {
-            throw new Error(`Product directory already exists: ${repoPath}`);
+        if (existsSync(rootPath)) {
+            throw new Error(`Product directory already exists: ${rootPath}`);
         }
 
         logInfo(`[Product] Creating product "${name}"...`);
+
+        // Create product root
+        mkdirSync(rootPath, { recursive: true });
 
         // Create product structure
         await this.initializeRepository(repoPath, name, description, options.remoteUrl);
@@ -88,6 +94,7 @@ export class ProductManager {
             description,
 
             // Repository
+            rootPath,
             repoPath,
             remoteUrl: options.remoteUrl,
             mainBranch: options.mainBranch || "main",

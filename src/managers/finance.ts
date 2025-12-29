@@ -2,42 +2,6 @@
  * Finance Manager
  *
  * Tracks costs, manages quotas, and implements fallback logic.
- *
- * ## Quota Probing Strategy
- *
- * This manager uses TWO types of probes:
- *
- * 1. **Quota-Only Probe** (Lightweight):
- *    - Fast check to see if model has quota available
- *    - Does NOT validate generative responses
- *    - Use for periodic monitoring (every 60s)
- *    - Method: `probeQuotaOnly(adapter)`
- *
- * 2. **Liveness Probe** (Expensive):
- *    - Validates service returns proper AI responses
- *    - Consumes quota (sends actual generation request)
- *    - Use SPARINGLY - only when planning to switch models
- *    - Methods: `validateModelSwitch()`, `probeLiveness()`
- *
- * ## When to Use Each Probe
- *
- * - **Quota-only**: Periodic monitoring, dashboard updates
- * - **Liveness**: Before redirecting agent to new model
- *
- * Example usage:
- * ```typescript
- * // Periodic monitoring (runs every 60s)
- * if (FinanceManager.shouldProbeQuota()) {
- *     await FinanceManager.probeQuotaOnly(adapter);
- * }
- *
- * // Before switching models
- * const canSwitch = await FinanceManager.validateModelSwitch(
- *     currentModel,
- *     targetModel,
- *     adapter
- * );
- * ```
  */
 
 import { getStorage } from "../storage/yaml";
@@ -91,6 +55,12 @@ export class FinanceManager {
     /** Minimum time between quota probes (milliseconds) */
     private static readonly PROBE_INTERVAL_MS = 60000; // Re-probe every 60 seconds
 
+    private storageDir?: string;
+
+    constructor(storageDir?: string) {
+        this.storageDir = storageDir;
+    }
+
     /**
      * Record the cost of an LLM operation
      *
@@ -100,16 +70,11 @@ export class FinanceManager {
      * @param model - Model identifier (e.g., "claude-sonnet")
      * @param tokens - Number of tokens used
      * @returns Calculated cost in USD
-     *
-     * @example
-     * ```typescript
-     * const finance = new FinanceManager();
-     * const cost = finance.recordOperation("gemini-3-flash", 1000);
-     * console.log(`Cost: $${cost.toFixed(4)}`);
-     * ```
      */
     recordOperation(model: string, tokens: number): number {
-        const storage = getStorage();
+        // If storageDir is provided, initialize/get with it.
+        // If not, use getStorage() which might fail if not initialized elsewhere (but plugin ensures it)
+        const storage = getStorage(this.storageDir);
         if (!storage) return 0;
 
         const costConfig = COST_PER_1M_TOKENS[model] || COST_PER_1M_TOKENS.default;
@@ -139,13 +104,10 @@ export class FinanceManager {
      * Get current project budget status
      */
     getBudgetStatus(): SimpleFinanceState | undefined {
-        const storage = getStorage();
+        const storage = getStorage(this.storageDir);
         return storage?.finance.getState();
     }
 
-    /**
-     * Get the best model based on category and current availability
-     */
     /**
      * Get the optimal model for a given category based on quota availability
      *
@@ -277,18 +239,10 @@ export class FinanceManager {
     }
 
     /**
-     * Get the best available model with quota
-     */
-    /**
      * Get the best available model with quota for a given category
      *
      * @param category - Model category (FAST, THINKING, or PREMIUM)
      * @returns Model ID if available, null if no models have quota
-     *
-     * Priority:
-     * 1. Category-matched models with available quota
-     * 2. Any model with available quota
-     * 3. null if no quota available
      */
     static getBestModelWithQuota(category: ModelCategory): string | null {
         const availableModels = FinanceManager.getAvailableModels();
@@ -311,40 +265,6 @@ export class FinanceManager {
 
         const firstAnyAvailable = anyAvailable[0];
         return firstAnyAvailable?.id || null;
-    }
-
-    /**
-     * Check if we should switch models and validate the target model
-     *
-     * Use this before switching to a different model. It will:
-     * 1. Check if current model still has quota
-     * 2. If switching, run liveness check on target model
-     *
-     * @param currentModel - The model currently in use
-     * @param targetModel - The model we want to switch to
-     * @param adapter - OpenCode adapter for probing
-     * @returns true if safe to switch, false if target is not live
-     */
-    static async validateModelSwitch(
-        currentModel: string,
-        targetModel: string,
-        adapter: any // OpenCodeAdapter type
-    ): Promise<boolean> {
-        // If same model, no switch needed
-        if (currentModel === targetModel) return true;
-
-        logInfo(`[Finance] Considering switch from ${currentModel} to ${targetModel}`);
-
-        // Run liveness check ONLY on the target model we're switching to
-        const livenessResult = await adapter.probeModelLiveness(targetModel);
-
-        if (!livenessResult.available) {
-            logError(`[Finance] ✗ Cannot switch to ${targetModel}: ${livenessResult.error}`);
-            return false;
-        }
-
-        logSuccess(`[Finance] ✓ ${targetModel} is live and ready`);
-        return true;
     }
 
     /**

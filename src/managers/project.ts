@@ -1,144 +1,163 @@
-/**
- * Project Manager
- *
- * Orchestrates project lifecycle, combining storage and git isolation.
- */
-
 import { v4 as uuid } from "uuid";
-import { getStorage } from "../storage/yaml";
-import { GitManager } from "./git";
-import type { ProjectSession, ProjectStatus } from "../types";
+import { join } from "path";
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
+import { execSync } from "child_process";
+import { parse, stringify } from "yaml";
+import type { FactoryConfig, Project } from "../types";
 
 export class ProjectManager {
-    private git: GitManager;
+    private factory: FactoryConfig;
 
-    /**
-     * Create a new ProjectManager instance
-     *
-     * @param baseRepoPath - Absolute path to the base git repository
-     */
-    constructor(baseRepoPath: string) {
-        this.git = new GitManager(baseRepoPath);
+    constructor(factory: FactoryConfig) {
+        this.factory = factory;
     }
 
     /**
-     * Initialize a new project with isolated git worktree
-     *
-     * This creates:
-     * - A new project record in YAML storage
-     * - An isolated git worktree for the project
-     * - A dedicated git branch (df/task/[uuid])
-     * - An empty task list
-     *
-     * The worktree allows the AI agent to work on the project without
-     * affecting the main repository or other concurrent projects.
-     *
-     * @param name - Human-readable project name
-     * @param description - Project description and initial task
-     * @returns The created project object
-     * @throws Error if worktree creation fails
-     *
-     * @example
-     * ```typescript
-     * const pm = new ProjectManager(process.cwd());
-     * const project = await pm.createProject("Add Auth", "Implement user authentication");
-     * ```
+     * Helper to detect default branch (main or master)
      */
-    async createProject(name: string, description: string): Promise<ProjectSession> {
-        const projectId = uuid();
-        const storage = getStorage();
-
-        // Create git worktree for isolation
-        const worktreePath = await this.git.createWorktree(projectId);
-
-        const project: ProjectSession = {
-            id: projectId,
-            name,
-            description,
-            status: "initializing" as ProjectStatus,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            maxRuntime: 12 * 60 * 60 * 1000, // 12 hours default
-            baseBranch: "master",
-            workBranch: `df/task/${projectId}`,
-            worktreePath,
-            subagents: [],
-            childProjectIds: [],
-            totalCost: 0,
-            tokensUsed: 0,
-        };
-
-        // Save project state
-        storage.projects.save(projectId, project);
-
-        // Initialize task list for project
-        storage.tasks(projectId).saveTasks([]);
-
-        return project;
-    }
-
-    /**
-     * List all projects from storage
-     *
-     * @returns Array of all projects
-     */
-    listProjects(): ProjectSession[] {
-        return getStorage().projects.listAll();
-    }
-
-    /**
-     * Get a single project by ID
-     *
-     * @param projectId - UUID of the project
-     * @returns Project object or undefined if not found
-     */
-    getProject(projectId: string): ProjectSession | undefined {
-        return getStorage().projects.get(projectId);
-    }
-
-    /**
-     * Delete a project and cleanup its resources
-     *
-     * This performs a complete cleanup:
-     * - Removes the git worktree
-     * - Deletes the git branch
-     * - Removes project from storage
-     * - Cleans up associated task files
-     *
-     * @param projectId - UUID of the project to delete
-     * @throws Error if worktree removal fails
-     */
-    async deleteProject(projectId: string): Promise<void> {
-        const storage = getStorage();
-        const project = storage.projects.get(projectId);
-
-        if (project) {
-            // Cleanup git worktree
-            await this.git.removeWorktree(projectId);
-
-            // Remove from storage
-            storage.projects.delete(projectId);
-
-            // Cleanup associated tasks file?
-            // (Optional: we could leave it or delete it. Deleting for now.)
-            // Note: storage.tasks() creates the repo, but we don't have a clear way
-            // to delete the file on disk easily through the repo API without adding it.
+    private getDefaultBranch(): string {
+        try {
+            // Check if main exists
+            execSync("git rev-parse --verify main", {
+                cwd: this.factory.mainRepoPath,
+                stdio: "ignore",
+            });
+            return "main";
+        } catch {
+            try {
+                // Check if master exists
+                execSync("git rev-parse --verify master", {
+                    cwd: this.factory.mainRepoPath,
+                    stdio: "ignore",
+                });
+                return "master";
+            } catch {
+                // Fallback to HEAD
+                return "HEAD";
+            }
         }
     }
 
     /**
-     * Update project status
-     *
-     * Updates the project's status field and refreshes the updatedAt timestamp.
-     *
-     * @param projectId - UUID of the project
-     * @param status - New status to set
+     * Create a new Project (Worktree)
+     * 1. Create worktree dir
+     * 2. git worktree add
+     * 3. Create metadata
      */
-    updateStatus(projectId: string, status: ProjectStatus): void {
-        const storage = getStorage();
-        storage.projects.update(projectId, {
-            status,
+    createProject(name: string, parentContext?: string): Project {
+        const projectId = uuid();
+        const branchName = `df/${name}`;
+        const baseBranch = this.getDefaultBranch();
+
+        // Worktree is a sibling to the main repo in the Factory Root
+        const worktreePath = join(this.factory.rootPath, `worktree-${name}`);
+
+        if (existsSync(worktreePath)) {
+            throw new Error(`Worktree path already exists: ${worktreePath}`);
+        }
+
+        // Create Branch & Worktree
+        // We run git commands from the MAIN REPO
+        try {
+            // Check if branch exists
+            let branchExists = false;
+            try {
+                execSync(`git rev-parse --verify ${branchName}`, {
+                    cwd: this.factory.mainRepoPath,
+                    stdio: "ignore",
+                });
+                branchExists = true;
+            } catch {
+                branchExists = false;
+            }
+
+            // Create branch if it doesn't exist
+            if (!branchExists) {
+                execSync(`git branch ${branchName} ${baseBranch}`, {
+                    cwd: this.factory.mainRepoPath,
+                });
+            }
+
+            execSync(`git worktree add ${worktreePath} ${branchName}`, {
+                cwd: this.factory.mainRepoPath,
+            });
+        } catch (e) {
+            throw new Error(`Failed to create git worktree: ${e}`);
+        }
+
+        // Initialize Context
+        const contextPath = join(worktreePath, "initial-context.md");
+        writeFileSync(contextPath, parentContext || "# Initial Context\n\nNo context provided.");
+
+        // Initial Commit for the Project
+        try {
+            execSync("git add initial-context.md", { cwd: worktreePath });
+            execSync('git commit -m "chore: Initialize project context"', { cwd: worktreePath });
+        } catch (e) {
+            console.warn("Failed to create initial commit:", e);
+        }
+
+        const project: Project = {
+            id: projectId,
+            name,
+            factoryId: this.factory.id,
+            branchName,
+            worktreePath,
+            status: "active",
+            childProjectIds: [],
+            contextPath,
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            totalCost: 0,
+            tokensUsed: 0,
+        };
+
+        this.saveProject(project);
+        return project;
+    }
+
+    private getProjectStoragePath(id: string): string {
+        return join(this.factory.rootPath, ".dark-factory", "projects", `${id}.yaml`);
+    }
+
+    private saveProject(project: Project) {
+        const projectsDir = join(this.factory.rootPath, ".dark-factory", "projects");
+        if (!existsSync(projectsDir)) {
+            mkdirSync(projectsDir, { recursive: true });
+        }
+        writeFileSync(this.getProjectStoragePath(project.id), stringify(project));
+    }
+
+    listProjects(): Project[] {
+        const projectsDir = join(this.factory.rootPath, ".dark-factory", "projects");
+        if (!existsSync(projectsDir)) return [];
+
+        // In a real app we'd use readdir and loop
+        // keeping it simple for now, assuming we might need an index later
+        // or just read all files
+        const fs = require("fs");
+        const files = fs.readdirSync(projectsDir).filter((f: string) => f.endsWith(".yaml"));
+        return files.map((f: string) => {
+            const content = readFileSync(join(projectsDir, f), "utf-8");
+            return parse(content) as Project;
         });
+    }
+
+    getProject(projectId: string): Project | undefined {
+        const path = this.getProjectStoragePath(projectId);
+        if (!existsSync(path)) return undefined;
+        try {
+            return parse(readFileSync(path, "utf-8")) as Project;
+        } catch {
+            return undefined;
+        }
+    }
+
+    updateProject(projectId: string, updates: Partial<Project>): void {
+        const project = this.getProject(projectId);
+        if (!project) throw new Error(`Project ${projectId} not found`);
+
+        const updatedProject = { ...project, ...updates, updatedAt: new Date().toISOString() };
+        this.saveProject(updatedProject);
     }
 }
