@@ -24,13 +24,13 @@ Dark Factory allows AI agents to work autonomously for up to 12 hours on complex
 
 🚧 **In Development** - Currently in planning phase
 
-See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for development roadmap.
+See [IMPLEMENTATION_PLAN.md](./docs/IMPLEMENTATION_PLAN.md) for development roadmap.
 
 ## Documentation
 
-- [PRD.md](./PRD.md) - Product Requirements Document
-- [SPEC.md](./SPEC.md) - Technical Specification
-- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) - Implementation Plan
+- [PRD.md](./docs/PRD.md) - Product Requirements Document
+- [SPEC.md](./docs/SPEC.md) - Technical Specification
+- [IMPLEMENTATION_PLAN.md](./docs/IMPLEMENTATION_PLAN.md) - Implementation Plan
 
 ## Requirements
 
@@ -91,7 +91,8 @@ df tasks my-feature
                   ▼
 ┌─────────────────────────────────────────┐
 │       LLM Provider Layer                │
-│  OpenAI | Anthropic | Custom            │
+│  OpenCode SDK + Antigravity OAuth       │
+│  (Gemini 3, Claude 4.5 via Antigravity) │
 └─────────────────────────────────────────┘
 ```
 

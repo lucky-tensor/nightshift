@@ -191,75 +191,58 @@ dark-factory/
 ## Phase 2: LLM Integration (Weeks 4-5)
 
 ### Goals
-- Implement LLM provider adapters
-- Create finance manager
+- Integrate OpenCode SDK with Antigravity auth
+- Create finance manager for model switching
 - Enable basic agent execution
 
 ### Tasks
 
-#### 2.1 Provider Interface
-- [ ] Define `LLMProvider` interface
-- [ ] Define `ProviderConfig` type
-- [ ] Define `ChatMessage` types
-- [ ] Create provider factory
+#### 2.1 OpenCode SDK Integration
+- [ ] Install `@opencode-ai/sdk` and `opencode-google-antigravity-auth`
+- [ ] Create OpenCode adapter wrapper
+- [ ] Implement session management
+- [ ] Handle Antigravity OAuth setup
+- [ ] Write unit tests (with mocks)
 
 **Acceptance Criteria**:
-- Interface supports all required operations
-- Type safety enforced
-- Factory pattern works
+- SDK initializes correctly
+- Antigravity OAuth works
+- Sessions can be created/managed
+- All tests pass
 
 **Files to Create**:
+- `src/providers/opencode-adapter.ts`
 - `src/providers/types.ts`
-- `src/providers/factory.ts`
+- `tests/unit/providers/opencode-adapter.test.ts`
 
-#### 2.2 OpenAI Adapter
-- [ ] Implement OpenAI provider
-- [ ] Handle streaming responses
-- [ ] Implement token counting
-- [ ] Implement cost calculation
-- [ ] Handle rate limits
-- [ ] Write unit tests (with mocks)
-
-**Acceptance Criteria**:
-- Can send/receive messages
-- Token counting accurate
-- Cost tracking works
-- Rate limit errors handled
-- All tests pass
-
-**Files to Create**:
-- `src/providers/openai-provider.ts`
-- `tests/unit/providers/openai-provider.test.ts`
-
-#### 2.3 Anthropic Adapter
-- [ ] Implement Anthropic provider
-- [ ] Handle streaming responses
-- [ ] Implement token counting
-- [ ] Implement cost calculation
-- [ ] Handle rate limits
-- [ ] Write unit tests (with mocks)
-
-**Acceptance Criteria**:
-- Same as OpenAI adapter
-- All tests pass
-
-**Files to Create**:
-- `src/providers/anthropic-provider.ts`
-- `tests/unit/providers/anthropic-provider.test.ts`
-
-#### 2.4 Finance Manager
-- [ ] Implement `addProvider()`
-- [ ] Implement `selectProvider()` with scoring algorithm
-- [ ] Implement `checkCredits()` via noop probe
-- [ ] Implement `switchProvider()`
-- [ ] Implement `recordCost()`
+#### 2.2 Model Mapping
+- [ ] Define model aliases (gemini-3-pro-high, claude-sonnet, etc.)
+- [ ] Implement model resolver
+- [ ] Map personas to default models
 - [ ] Write unit tests
 
 **Acceptance Criteria**:
-- Provider selection works
-- Credit monitoring works
-- Provider switching works
+- All Antigravity models mapped
+- Per-request model selection works
+- Persona defaults work
+- All tests pass
+
+**Files to Create**:
+- `src/providers/model-mapper.ts`
+- `tests/unit/providers/model-mapper.test.ts`
+
+#### 2.3 Finance Manager
+- [ ] Implement `selectModel()` based on persona/task
+- [ ] Implement `switchModel()` on error/request
+- [ ] Implement `recordCost()` for tracking
+- [ ] Implement fallback chain logic
+- [ ] Write unit tests
+
+**Acceptance Criteria**:
+- Model selection works
+- Model switching works
 - Cost tracking accurate
+- Fallback chain works
 - All tests pass
 
 **Files to Create**:
@@ -267,37 +250,39 @@ dark-factory/
 - `src/storage/finance-storage.ts`
 - `tests/unit/managers/finance-manager.test.ts`
 
-#### 2.5 Polling Mode
-- [ ] Implement `enterPollingMode()`
-- [ ] Implement `exitPollingMode()`
-- [ ] Implement periodic probing
-- [ ] Implement auto-resume on recovery
+#### 2.4 Rate Limit Handling
+- [ ] Implement rate limit detection (via OpenCode plugin)
+- [ ] Implement automatic retry with backoff
+- [ ] Implement model fallback on persistent limits
 - [ ] Write integration test
 
 **Acceptance Criteria**:
-- Enters polling when no providers available
-- Probes at configured interval
-- Resumes when provider available
+- Rate limits detected
+- Retries work correctly
+- Fallback triggers on persistent limits
 - Integration test passes
 
 **Files to Create**:
-- `src/managers/polling-service.ts`
-- `tests/integration/polling-mode.test.ts`
+- `src/providers/rate-limit-handler.ts`
+- `tests/integration/rate-limiting.test.ts`
 
-#### 2.6 CLI Provider Commands
-- [ ] Implement `df provider add`
-- [ ] Implement `df provider list`
-- [ ] Implement `df provider remove`
+#### 2.5 CLI Provider Commands
+- [ ] Implement `df auth` command (Antigravity OAuth)
+- [ ] Implement `df models` command (list available)
 - [ ] Implement `df costs` command
+- [ ] Implement `df config model` command
 
 **Acceptance Criteria**:
-- Can manage providers via CLI
-- API keys encrypted at rest
+- Can authenticate with Antigravity
+- Can list available models
 - Cost reports are clear
+- Model config works
 
 **Files to Create**:
-- `src/cli/commands/provider.ts`
+- `src/cli/commands/auth.ts`
+- `src/cli/commands/models.ts`
 - `src/cli/commands/costs.ts`
+
 
 ---
 

@@ -30,11 +30,13 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    LLM Provider Layer                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Antigravity  │  │   OpenAI     │  │  Anthropic   │      │
-│  │ CLI Adapter  │  │   Adapter    │  │   Adapter    │      │
-│  │  (Primary)   │  └──────────────┘  └──────────────┘      │
-│  └──────────────┘                                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              OpenCode SDK + Antigravity Auth         │   │
+│  │  ┌──────────────┐  ┌──────────────┐                 │   │
+│  │  │ Gemini 3 Pro │  │ Claude 4.5   │  (via Antigravity│   │
+│  │  │ Gemini Flash │  │ Claude Opus  │   OAuth/Quota)  │   │
+│  │  └──────────────┘  └──────────────┘                 │   │
+│  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -1102,88 +1104,146 @@ interface CommandResult {
 }
 ```
 
-#### 4.4.2 Critical Requirements
+#### 4.4.2 OpenCode SDK Integration
 
-**BLOCKER: Quota Detection (Q1)**
-- Must detect when Antigravity quota is exhausted
-- Required for Finance Manager to trigger provider switching
-- Investigation needed: Error patterns, quota API, noop probe behavior
+Dark Factory uses the OpenCode SDK with the `opencode-google-antigravity-auth` plugin to access LLMs through Antigravity's OAuth and quota system.
 
-**BLOCKER: Provider Switching (Q2)**
-- Must support switching to different provider mid-conversation
-- Required for autonomous operation when quota exhausted
-- Investigation needed: Conversation export/import, context preservation
+**Key Benefits:**
+- Programmatic model selection (Gemini, Claude) per request
+- Uses Antigravity's quota (no separate API billing)
+- Full TypeScript SDK with type safety
+- Session management, file operations, and events
 
-**HIGH PRIORITY: State Management (Q3)**
-- Should persist conversation state across restarts
-- Needed for pause/resume functionality
-- Investigation needed: Conversation storage location, programmatic access
+#### 4.4.3 OpenCode Adapter Implementation
 
-**HIGH PRIORITY: Error Handling (Q4)**
-- Must classify different error types (quota, network, invalid input)
-- Needed for appropriate error recovery
-- Investigation needed: Exit codes, error message patterns
+```typescript
+import { createOpencode, createOpencodeClient } from "@opencode-ai/sdk";
+import type { Session, Message } from "@opencode-ai/sdk";
 
-#### 4.4.3 Antigravity CLI Usage
-
-```bash
-# Basic agent invocation
-antigravity chat --mode agent "Implement feature X"
-
-# With file context
-antigravity chat --mode agent "Fix bug" -a src/file.ts
-
-# Piped input
-cat error.log | antigravity chat --mode agent "Debug this" -
-
-# Window management
-antigravity chat --reuse-window "Continue task"
-antigravity chat --new-window "New task"
+export class OpenCodeAdapter implements LLMProvider {
+  private client: ReturnType<typeof createOpencodeClient>;
+  private server: any;
+  private currentSession: Session | null = null;
+  
+  async initialize(): Promise<void> {
+    // Start OpenCode server with Antigravity auth plugin
+    const { client, server } = await createOpencode({
+      config: {
+        plugin: ["opencode-google-antigravity-auth"],
+      }
+    });
+    
+    this.client = client;
+    this.server = server;
+  }
+  
+  async sendMessage(
+    message: string, 
+    options: { model?: string; context?: string[] } = {}
+  ): Promise<LLMResponse> {
+    if (!this.currentSession) {
+      this.currentSession = await this.client.session.create({
+        body: { title: `Dark Factory Session ${Date.now()}` }
+      });
+    }
+    
+    // Map model names to provider/model format
+    const modelConfig = this.resolveModel(options.model);
+    
+    const result = await this.client.session.prompt({
+      path: { id: this.currentSession.id },
+      body: {
+        model: modelConfig,
+        parts: [{ type: "text", text: message }],
+      },
+    });
+    
+    return {
+      content: this.extractContent(result),
+      model: options.model || "gemini-3-pro-high",
+      tokensUsed: result.usage?.totalTokens || 0,
+    };
+  }
+  
+  private resolveModel(model?: string): { providerID: string; modelID: string } {
+    const modelMap: Record<string, { providerID: string; modelID: string }> = {
+      "gemini-3-pro-high": { providerID: "google", modelID: "gemini-3-pro-preview" },
+      "gemini-3-pro-low": { providerID: "google", modelID: "gemini-3-pro-preview" },
+      "gemini-3-flash": { providerID: "google", modelID: "gemini-3-flash" },
+      "claude-sonnet": { providerID: "google", modelID: "gemini-claude-sonnet-4-5-thinking" },
+      "claude-opus": { providerID: "google", modelID: "gemini-claude-opus-4-5-thinking" },
+    };
+    
+    return modelMap[model || "gemini-3-pro-high"] || modelMap["gemini-3-pro-high"];
+  }
+  
+  async switchModel(model: string): Promise<void> {
+    // Model is specified per-request, no global switch needed
+    // Finance Manager can simply pass different model to sendMessage()
+  }
+  
+  async checkQuota(): Promise<QuotaStatus> {
+    // OpenCode handles rate limiting internally via the auth plugin
+    // Multi-account load balancing is automatic
+    return {
+      available: true,
+      remaining: -1, // Unknown but handled by plugin
+    };
+  }
+  
+  async shutdown(): Promise<void> {
+    if (this.server) {
+      this.server.close();
+    }
+  }
+}
 ```
 
-#### 4.4.4 Configuration
+#### 4.4.4 Available Models
+
+Via Antigravity OAuth (using `opencode-google-antigravity-auth`):
+
+| Model ID | Description | Use Case |
+|----------|-------------|----------|
+| `gemini-3-pro-high` | Gemini 3 Pro with high thinking | Complex planning, architecture |
+| `gemini-3-pro-low` | Gemini 3 Pro with low thinking | Quick tasks |
+| `gemini-3-flash` | Gemini 3 Flash | Fast responses, simple tasks |
+| `claude-sonnet` | Claude Sonnet 4.5 via Antigravity | Code generation |
+| `claude-opus` | Claude Opus 4.5 via Antigravity | Complex reasoning |
+
+#### 4.4.5 Configuration
 
 ```yaml
-# ~/.dark-factory/providers.yaml
-providers:
-  - id: antigravity-primary
-    name: antigravity
-    type: cli
-    enabled: true
-    priority: 1
-    config:
-      cli_path: /Applications/Antigravity.app/Contents/Resources/app/bin/antigravity
-      mode: agent
-      window_strategy: reuse  # reuse | new
-      
-  - id: openai-fallback
-    name: openai
-    model: gpt-4
-    enabled: true
-    priority: 2
-    config:
-      api_key: encrypted:...
-      
-  - id: anthropic-fallback
-    name: anthropic
-    model: claude-3-opus
-    enabled: true
-    priority: 3
-    config:
-      api_key: encrypted:...
+# ~/.dark-factory/config.yaml
+llm:
+  adapter: opencode
+  default_model: gemini-3-pro-high
+  
+  # Model routing by persona
+  persona_models:
+    engineer: claude-sonnet
+    tester: gemini-3-flash
+    reviewer: claude-opus
+    pm: gemini-3-pro-low
+    
+  # Fallback chain if primary fails
+  fallback_chain:
+    - gemini-3-pro-high
+    - claude-sonnet
+    - gemini-3-flash
 ```
 
-#### 4.4.5 Open Questions
+#### 4.4.6 Dependencies
 
-See [TECHNICAL_QUESTIONS.md](./TECHNICAL_QUESTIONS.md) for detailed investigation plan:
+```json
+{
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.0.0",
+    "opencode-google-antigravity-auth": "^1.0.0"
+  }
+}
+```
 
-1. **Q1: Quota Detection** 🔴 BLOCKER
-   - How to detect quota exhaustion?
-   - Can we check remaining quota?
-   - Do noop probes work reliably?
-
-2. **Q2: Provider Switching** 🔴 BLOCKER
-   - Can we switch providers mid-conversation?
    - How to preserve conversation context?
    - What's the provider configuration mechanism?
 
