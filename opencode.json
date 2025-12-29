@@ -9,35 +9,27 @@
             "models": {
                 "gemini-3-pro-high": {
                     "id": "gemini-3-pro-preview",
-                    "name": "Gemini 3 Pro (High Thinking)",
-                    "options": {
-                        "thinkingConfig": {
-                            "thinkingLevel": "high",
-                            "includeThoughts": true
-                        }
-                    }
+                    "name": "Gemini 3 Pro (High)"
                 },
                 "gemini-3-pro-low": {
                     "id": "gemini-3-pro-preview",
-                    "name": "Gemini 3 Pro (Low Thinking)",
-                    "options": {
-                        "thinkingConfig": {
-                            "thinkingLevel": "low",
-                            "includeThoughts": true
-                        }
-                    }
+                    "name": "Gemini 3 Pro (Low)"
                 },
                 "gemini-3-flash": {
                     "id": "gemini-3-flash",
                     "name": "Gemini 3 Flash"
                 },
                 "claude-sonnet": {
+                    "id": "gemini-claude-sonnet-4-5",
+                    "name": "Claude Sonnet 4.5"
+                },
+                "claude-sonnet-thinking": {
                     "id": "gemini-claude-sonnet-4-5-thinking",
-                    "name": "Claude Sonnet 4.5 (via Antigravity)"
+                    "name": "Claude Sonnet 4.5 (Thinking)"
                 },
                 "claude-opus": {
                     "id": "gemini-claude-opus-4-5-thinking",
-                    "name": "Claude Opus 4.5 (via Antigravity)"
+                    "name": "Claude Opus 4.5 (Thinking)"
                 }
             }
         }

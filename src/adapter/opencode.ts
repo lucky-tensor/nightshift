@@ -15,13 +15,11 @@ export const MODEL_MAP: Record<string, { providerID: string; modelID: string }> 
     "gemini-3-pro-high": { providerID: "google", modelID: "gemini-3-pro-preview" },
     "gemini-3-pro-low": { providerID: "google", modelID: "gemini-3-pro-preview" },
     "gemini-3-flash": { providerID: "google", modelID: "gemini-3-flash" },
-    "gemini-3-flash-high": { providerID: "google", modelID: "gemini-3-flash" },
 
     // Claude models via Antigravity
-    "claude-sonnet": { providerID: "google", modelID: "gemini-claude-sonnet-4-5-thinking" },
-    "claude-sonnet-thinking": { providerID: "google", modelID: "gemini-claude-sonnet-4-5-thinking" },
-    "claude-opus": { providerID: "google", modelID: "gemini-claude-opus-4-5-thinking" },
-    "claude-opus-thinking": { providerID: "google", modelID: "gemini-claude-opus-4-5-thinking" },
+    "claude-sonnet": { providerID: "google", modelID: "claude-sonnet" },
+    "claude-sonnet-thinking": { providerID: "google", modelID: "claude-sonnet-thinking" },
+    "claude-opus": { providerID: "google", modelID: "claude-opus" },
 };
 
 // Default models for each persona
@@ -38,12 +36,14 @@ export interface LLMResponse {
     model: string;
     tokensUsed: number;
     sessionId: string;
+    toolCalls?: any[];
 }
 
 export interface SendMessageOptions {
     model?: string;
     persona?: string;
     context?: string[];
+    tools?: Record<string, boolean>;
 }
 
 export class OpenCodeAdapter {
@@ -51,27 +51,67 @@ export class OpenCodeAdapter {
     private server: { close: () => void; url: string } | null = null;
     private currentSession: Session | null = null;
     private initialized = false;
+    private initPromise: Promise<void> | null = null;
 
     /**
      * Initialize the OpenCode server with Antigravity auth plugin
      */
     async initialize(): Promise<void> {
         if (this.initialized) return;
+        if (this.initPromise) return this.initPromise;
 
-        try {
-            const { client, server } = await createOpencode({
-                config: {
-                    // The antigravity auth plugin will be loaded from the user's opencode config
-                    // User needs to run `opencode auth login` first to set up OAuth
-                },
-            });
+        this.initPromise = (async () => {
+            try {
+                // Check if server is already running
+                const existingUrl = "http://127.0.0.1:4096";
+                try {
+                    const response = await fetch(`${existingUrl}/health`, { signal: AbortSignal.timeout(1000) });
+                    if (response.ok) {
+                        console.log(chalk.dim(`[DEBUG] Found existing OpenCode server at ${existingUrl}`));
+                        const { createOpenCodeClient } = require("@opencode-ai/sdk");
+                        this.client = createOpenCodeClient({ url: existingUrl });
+                        this.initialized = true;
+                        return;
+                    }
+                } catch (e) {
+                    // Not running, proceed to create
+                }
 
-            this.client = client;
-            this.server = server;
-            this.initialized = true;
-        } catch (error) {
-            throw new Error(`Failed to initialize OpenCode: ${error}`);
+                console.log(chalk.dim("[DEBUG] Starting OpenCode server..."));
+                const { client, server } = await createOpencode({
+                    // Config will be inherited from current directory opencode.json
+                });
+
+                this.client = client;
+                this.server = server;
+                await this.waitForReady(server.url);
+                this.initialized = true;
+            } catch (error) {
+                console.error(chalk.red(`[ERROR] OpenCode init failed: ${error}`));
+                throw new Error(`Failed to initialize OpenCode: ${error}`);
+            } finally {
+                this.initPromise = null;
+            }
+        })();
+
+        return this.initPromise;
+    }
+
+    /**
+     * Poll until OpenCode server is ready
+     */
+    private async waitForReady(url: string, timeoutMs: number = 10000): Promise<void> {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            try {
+                const response = await fetch(`${url}/health`);
+                if (response.ok) return;
+            } catch (e) {
+                // Wait and retry
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
+        throw new Error(`Timeout waiting for server to start after ${timeoutMs}ms`);
     }
 
     /**
@@ -99,30 +139,57 @@ export class OpenCodeAdapter {
         // Resolve model from options
         const modelConfig = this.resolveModel(options.model, options.persona);
 
+        const body = {
+            model: modelConfig,
+            parts: [{ type: "text" as const, text: message }],
+            tools: options.tools,
+        };
+        console.log(chalk.dim(`[DEBUG] OpenCode Request Body: ${JSON.stringify(body)}`));
+
         // Send prompt
         const result = await this.client.session.prompt({
             path: { id: this.currentSession.id },
-            body: {
-                model: modelConfig,
-                parts: [{ type: "text", text: message }],
-            },
+            body: body,
         });
 
-        // Debug log if result looks empty or contains error
+        // Debug log full result
+        console.log(chalk.dim(`[DEBUG] OpenCode Result Keys: ${Object.keys(result).join(", ")}`));
+        if (result.data) console.log(chalk.dim(`[DEBUG] OpenCode Data Keys: ${Object.keys(result.data).join(", ")}`));
+        if (result.response) {
+            console.log(chalk.dim(`[DEBUG] OpenCode Response Status: ${(result.response as any).status}`));
+            console.log(chalk.dim(`[DEBUG] OpenCode Response Keys: ${Object.keys(result.response).join(", ")}`));
+            const assistantMsg = (result.response as any).info || (result.response as any).data || result.response;
+            if (assistantMsg.tokens) console.log(chalk.dim(`[DEBUG] OpenCode Response Tokens: ${JSON.stringify(assistantMsg.tokens)}`));
+        }
+
+        const usage = (result as any).usage || (result as any).data?.usage || (result.response as any)?.tokens || (result.response as any)?.info?.tokens || {};
+        console.log(chalk.dim(`[DEBUG] OpenCode Usage Extracted: ${JSON.stringify(usage)}`));
+
         if (!result || (result as any).error || (result as any).data === undefined) {
-            console.log(chalk?.dim ? chalk.dim(`[DEBUG] OpenCode result: ${JSON.stringify(result)}`) : `[DEBUG] OpenCode result: ${JSON.stringify(result)}`);
+            const error = (result as any)?.error;
+            const errorStr = JSON.stringify(error) || "";
+
+            if (errorStr.toLowerCase().includes("rate limit") || errorStr.includes("429")) {
+                const provider = modelConfig.providerID === 'google' ? 'google' : 'anthropic';
+                const { FinanceManager } = require("../managers/finance");
+                FinanceManager.markRateLimited(provider);
+            }
+
+            console.log(chalk?.dim ? chalk.dim(`[DEBUG] OpenCode result: ${errorStr}`) : `[DEBUG] OpenCode result: ${errorStr}`);
         }
 
         // Extract content from result
         const content = this.extractContent(result);
 
-        const usage = (result as any).usage || (result as any).data?.usage || {};
+        // Extract tools/calls from result
+        const toolCalls = this.extractToolCalls(result);
 
         return {
             content,
             model: options.model || this.getModelNameFromConfig(modelConfig),
             tokensUsed: usage.totalTokens || 0,
             sessionId: this.currentSession.id!,
+            toolCalls,
         };
     }
 
@@ -252,6 +319,29 @@ export class OpenCodeAdapter {
         }
 
         return JSON.stringify(result);
+    }
+
+    /**
+     * Extract tool calls from OpenCode response
+     */
+    private extractToolCalls(result: any): any[] | undefined {
+        if (!result) return undefined;
+        const data = result.data !== undefined ? result.data : result;
+        if (!data) return undefined;
+
+        // Handle AssistantMessage format
+        if (data.parts) {
+            const calls = data.parts.filter((p: any) => p.type === "toolCall");
+            return calls.length > 0 ? calls : undefined;
+        }
+
+        // Check for nested response in wrapper
+        if (data.response?.parts) {
+            const calls = data.response.parts.filter((p: any) => p.type === "toolCall");
+            return calls.length > 0 ? calls : undefined;
+        }
+
+        return undefined;
     }
 
     /**

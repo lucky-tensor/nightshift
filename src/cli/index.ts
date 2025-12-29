@@ -13,6 +13,7 @@ import type { Task, TaskStatus } from "../types";
 import { getOpenCodeAdapter, initializeOpenCode } from "../adapter/opencode";
 import { ProjectManager } from "../managers/project";
 import { TaskManager } from "../managers/task";
+import { FinanceManager } from "../managers/finance";
 import { AgentRuntime } from "../runtime/agent";
 import { v4 as uuid } from "uuid";
 import Table from "cli-table3";
@@ -367,9 +368,8 @@ program
             });
 
             // Record economics
-            const storage = getStorage();
-            const adapterObj = getOpenCodeAdapter();
-            storage.finance.recordCost(adapterObj.getPersonaModel(options.persona) || "default", result.tokensUsed, result.cost);
+            const finance = new FinanceManager();
+            finance.recordOperation(targetTask.assignedPersona || options.persona, result.tokensUsed);
 
             if (result.success) {
                 console.log(chalk.green(`\nTask "${targetTask.title}" completed successfully!`));
@@ -412,14 +412,13 @@ program
             console.log();
             console.log(chalk.bold("Model:"), response.model);
             console.log(chalk.bold("Tokens:"), response.tokensUsed);
+            const finance = new FinanceManager();
+            finance.recordOperation(options.model, response.tokensUsed);
+
             console.log(chalk.bold("Response:"));
             console.log(chalk.dim("─".repeat(50)));
             console.log(response.content);
             console.log(chalk.dim("─".repeat(50)));
-
-            // Record cost
-            const storage = getStorage();
-            storage.finance.recordCost(response.model, response.tokensUsed, 0); // Cost tracking TBD
 
             await adapter.shutdown();
         } catch (error) {

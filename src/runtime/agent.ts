@@ -7,6 +7,7 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { getOpenCodeAdapter } from "../adapter/opencode";
+import { FinanceManager } from "../managers/finance";
 import type { Project, Task, PersonaConfig } from "../types";
 import chalk from "chalk";
 
@@ -41,18 +42,23 @@ export class AgentRuntime {
         // to perform the task.
 
         try {
+            const finance = new FinanceManager();
+            const category = finance.getCategoryForPersona(persona);
+            const model = finance.getOptimalModel(category);
+
             const response = await adapter.sendMessage(systemPrompt, {
                 persona,
-                model: adapter.getPersonaModel(persona)
+                model: model
             });
 
-            console.log(chalk.green(`[Agent] Task execution completed.`));
+            const cost = finance.recordOperation(model, response.tokensUsed);
+            console.log(chalk.green(`[Agent] Task execution completed. Cost: $${cost.toFixed(4)}`));
 
             return {
                 success: true,
                 message: response.content,
                 tokensUsed: response.tokensUsed,
-                cost: 0 // TBD
+                cost: cost
             };
         } catch (error) {
             console.error(chalk.red(`[Agent] Task execution failed:`), error);
