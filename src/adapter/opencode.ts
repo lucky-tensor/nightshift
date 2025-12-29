@@ -8,6 +8,10 @@
 import { createOpencode, createOpencodeClient } from "@opencode-ai/sdk";
 import type { Session } from "@opencode-ai/sdk";
 import chalk from "chalk";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
+import { FinanceManager } from "../managers/finance";
 
 // Model mapping from friendly names to OpenCode provider/model format
 export const MODEL_MAP: Record<string, { providerID: string; modelID: string }> = {
@@ -52,39 +56,88 @@ export class OpenCodeAdapter {
     private currentSession: Session | null = null;
     private initialized = false;
     private initPromise: Promise<void> | null = null;
+    private availableModels: Record<string, { providerID: string; modelID: string }> = { ...MODEL_MAP };
 
     /**
      * Initialize the OpenCode server with Antigravity auth plugin
      */
-    async initialize(): Promise<void> {
+    async initialize(options: { port?: number } = {}): Promise<void> {
         if (this.initialized) return;
         if (this.initPromise) return this.initPromise;
 
         this.initPromise = (async () => {
             try {
-                // Check if server is already running
-                const existingUrl = "http://127.0.0.1:4096";
-                try {
-                    const response = await fetch(`${existingUrl}/health`, { signal: AbortSignal.timeout(1000) });
-                    if (response.ok) {
-                        console.log(chalk.dim(`[DEBUG] Found existing OpenCode server at ${existingUrl}`));
-                        const { createOpenCodeClient } = require("@opencode-ai/sdk");
-                        this.client = createOpenCodeClient({ url: existingUrl });
-                        this.initialized = true;
-                        return;
-                    }
-                } catch (e) {
-                    // Not running, proceed to create
-                }
-
-                console.log(chalk.dim("[DEBUG] Starting OpenCode server..."));
                 const { client, server } = await createOpencode({
-                    // Config will be inherited from current directory opencode.json
+                    timeout: 30000, // Increase internal timeout to 30s
+                    port: options.port
                 });
 
                 this.client = client;
                 this.server = server;
-                await this.waitForReady(server.url);
+                // Read local config for model definitions
+                try {
+                    const configPath = path.join(os.homedir(), ".config/opencode/opencode.json");
+                    const configFile = await fs.readFile(configPath, "utf-8");
+                    const config = JSON.parse(configFile);
+
+                    if (config.provider?.google?.models) {
+                        for (const [id, model] of Object.entries(config.provider.google.models)) {
+                            // In the config file, keys are the model IDs used by the SDK
+                            const modelConfig = {
+                                providerID: "google",
+                                modelID: id
+                            };
+
+                            // Helper to safely store mapping
+                            const setMapping = (alias: string) => {
+                                this.availableModels[alias] = modelConfig;
+                            };
+
+                            // Store by ID (exact match)
+                            setMapping(id);
+
+                            // Map friendly aliases
+                            const idLower = id.toLowerCase();
+
+                            // Claude Sonnet logic
+                            if (idLower.includes("claude-sonnet")) {
+                                // Prefer base 4.5 version for the generic alias, avoid thinking/high if possible
+                                if (idLower.includes("4-5") && !idLower.includes("thinking") && !idLower.includes("high")) {
+                                    setMapping("claude-sonnet");
+                                } else if (!this.availableModels["claude-sonnet"]) {
+                                    // Fallback if we haven't found a better one yet
+                                    setMapping("claude-sonnet");
+                                }
+                            }
+
+                            // Claude Opus
+                            if (idLower.includes("claude-opus")) setMapping("claude-opus");
+
+                            // Gemini Flash
+                            if (idLower.includes("gemini-3-flash")) setMapping("gemini-3-flash");
+                            if (idLower.includes("gemini-1.5-flash")) setMapping("gemini-1.5-flash");
+
+                            // Gemini Pro
+                            if (idLower.includes("gemini-3-pro")) {
+                                if (idLower.includes("high")) setMapping("gemini-3-pro-high");
+                                else if (idLower.includes("low")) setMapping("gemini-3-pro-low");
+                                else if (!this.availableModels["gemini-3-pro"]) setMapping("gemini-3-pro");
+                            }
+                        }
+                    }
+
+                    console.log(chalk.blue(`[INFO] Loaded ${Object.keys(this.availableModels).length} model mappings from local config`));
+                    if (this.availableModels["gemini-3-flash"]) {
+                        console.log(chalk.blue(`[INFO] Mapping gemini-3-flash -> ${JSON.stringify(this.availableModels["gemini-3-flash"])}`));
+                    }
+                    if (this.availableModels["claude-sonnet"]) {
+                        console.log(chalk.blue(`[INFO] Mapping claude-sonnet -> ${JSON.stringify(this.availableModels["claude-sonnet"])}`));
+                    }
+                } catch (configError) {
+                    console.warn(chalk.yellow(`[WARN] Failed to load local opencode config: ${configError}`));
+                    console.warn(chalk.yellow(`[WARN] Falling back to default static mappings`));
+                }
+
                 this.initialized = true;
             } catch (error) {
                 console.error(chalk.red(`[ERROR] OpenCode init failed: ${error}`));
@@ -98,20 +151,31 @@ export class OpenCodeAdapter {
     }
 
     /**
-     * Poll until OpenCode server is ready
+     * Resolve a model alias to OpenCode format
      */
-    private async waitForReady(url: string, timeoutMs: number = 10000): Promise<void> {
-        const start = Date.now();
-        while (Date.now() - start < timeoutMs) {
-            try {
-                const response = await fetch(`${url}/health`);
-                if (response.ok) return;
-            } catch (e) {
-                // Wait and retry
-            }
-            await new Promise(resolve => setTimeout(resolve, 500));
+    resolveModel(
+        model?: string,
+        persona?: string
+    ): { providerID: string; modelID: string } {
+        // Priority: explicit model > persona default > global default
+        let modelName = model;
+
+        if (!modelName && persona) {
+            modelName = PERSONA_MODELS[persona];
         }
-        throw new Error(`Timeout waiting for server to start after ${timeoutMs}ms`);
+
+        if (!modelName) {
+            modelName = "default";
+            if (PERSONA_MODELS.default) modelName = PERSONA_MODELS.default;
+        }
+
+        const mapping = this.availableModels[modelName];
+        if (!mapping) {
+            // Unknown model, try to use it directly
+            return { providerID: "google", modelID: modelName };
+        }
+
+        return mapping;
     }
 
     /**
@@ -144,38 +208,41 @@ export class OpenCodeAdapter {
             parts: [{ type: "text" as const, text: message }],
             tools: options.tools,
         };
-        console.log(chalk.dim(`[DEBUG] OpenCode Request Body: ${JSON.stringify(body)}`));
 
-        // Send prompt
         const result = await this.client.session.prompt({
             path: { id: this.currentSession.id },
             body: body,
         });
 
-        // Debug log full result
-        console.log(chalk.dim(`[DEBUG] OpenCode Result Keys: ${Object.keys(result).join(", ")}`));
-        if (result.data) console.log(chalk.dim(`[DEBUG] OpenCode Data Keys: ${Object.keys(result.data).join(", ")}`));
-        if (result.response) {
-            console.log(chalk.dim(`[DEBUG] OpenCode Response Status: ${(result.response as any).status}`));
-            console.log(chalk.dim(`[DEBUG] OpenCode Response Keys: ${Object.keys(result.response).join(", ")}`));
-            const assistantMsg = (result.response as any).info || (result.response as any).data || result.response;
-            if (assistantMsg.tokens) console.log(chalk.dim(`[DEBUG] OpenCode Response Tokens: ${JSON.stringify(assistantMsg.tokens)}`));
-        }
-
-        const usage = (result as any).usage || (result as any).data?.usage || (result.response as any)?.tokens || (result.response as any)?.info?.tokens || {};
-        console.log(chalk.dim(`[DEBUG] OpenCode Usage Extracted: ${JSON.stringify(usage)}`));
-
-        if (!result || (result as any).error || (result as any).data === undefined) {
-            const error = (result as any)?.error;
-            const errorStr = JSON.stringify(error) || "";
+        if (!result || (result as any).error || (result as any).data === undefined || Object.keys((result as any).data || {}).length === 0) {
+            const error = (result as any)?.error || (result as any).data?.info?.error || (result as any).data?.error;
+            const errorStr = error ? JSON.stringify(error) : "Empty response from OpenCode";
 
             if (errorStr.toLowerCase().includes("rate limit") || errorStr.includes("429")) {
                 const provider = modelConfig.providerID === 'google' ? 'google' : 'anthropic';
-                const { FinanceManager } = require("../managers/finance");
                 FinanceManager.markRateLimited(provider);
             }
 
-            console.log(chalk?.dim ? chalk.dim(`[DEBUG] OpenCode result: ${errorStr}`) : `[DEBUG] OpenCode result: ${errorStr}`);
+            console.error(chalk.red(`[ERROR] OpenCode prompt failed: ${errorStr}`));
+            console.error(chalk.dim(`Request body: ${JSON.stringify(body)}`));
+            console.error(chalk.dim(`Raw result: ${JSON.stringify(result)}`));
+            throw new Error(`OpenCode error: ${errorStr}`);
+        }
+
+        // Robust token usage extraction
+        let tokensUsed = 0;
+        const resultData = (result as any).data;
+        if (resultData?.usage?.totalTokens) {
+            tokensUsed = resultData.usage.totalTokens;
+        } else if (resultData?.parts) {
+            // Check parts for usage data
+            const usagePart = resultData.parts.find((p: any) => p.type === "usage" || p.tokens);
+            if (usagePart?.tokens?.output) {
+                // Some providers return separate input/output
+                tokensUsed = (usagePart.tokens.input || 0) + (usagePart.tokens.output || 0);
+            } else if (usagePart?.totalTokens) {
+                tokensUsed = usagePart.totalTokens;
+            }
         }
 
         // Extract content from result
@@ -187,7 +254,7 @@ export class OpenCodeAdapter {
         return {
             content,
             model: options.model || this.getModelNameFromConfig(modelConfig),
-            tokensUsed: usage.totalTokens || 0,
+            tokensUsed,
             sessionId: this.currentSession.id!,
             toolCalls,
         };
@@ -231,7 +298,7 @@ export class OpenCodeAdapter {
      * Get all available models
      */
     getAvailableModels(): string[] {
-        return Object.keys(MODEL_MAP);
+        return Object.keys(this.availableModels);
     }
 
     /**
@@ -254,32 +321,6 @@ export class OpenCodeAdapter {
         this.currentSession = null;
     }
 
-    /**
-     * Resolve a model alias to OpenCode format
-     */
-    private resolveModel(
-        model?: string,
-        persona?: string
-    ): { providerID: string; modelID: string } {
-        // Priority: explicit model > persona default > global default
-        let modelName = model;
-
-        if (!modelName && persona) {
-            modelName = PERSONA_MODELS[persona];
-        }
-
-        if (!modelName) {
-            modelName = "default";
-        }
-
-        const mapping = MODEL_MAP[modelName];
-        if (!mapping) {
-            // Unknown model, try to use it directly
-            return { providerID: "google", modelID: modelName };
-        }
-
-        return mapping;
-    }
 
     /**
      * Extract text content from OpenCode response
