@@ -7,6 +7,7 @@
 
 import { createOpencode, createOpencodeClient } from "@opencode-ai/sdk";
 import type { Session } from "@opencode-ai/sdk";
+import chalk from "chalk";
 
 // Model mapping from friendly names to OpenCode provider/model format
 export const MODEL_MAP: Record<string, { providerID: string; modelID: string }> = {
@@ -86,10 +87,14 @@ export class OpenCodeAdapter {
 
         // Create session if needed
         if (!this.currentSession) {
-            this.currentSession = await this.client.session.create({
+            const res = await this.client.session.create({
                 body: { title: `Dark Factory Session ${Date.now()}` },
             });
+            if (res.error) throw new Error(`Failed to create session: ${JSON.stringify(res.error)}`);
+            this.currentSession = res.data;
         }
+
+        if (!this.currentSession) throw new Error("Failed to establish session");
 
         // Resolve model from options
         const modelConfig = this.resolveModel(options.model, options.persona);
@@ -103,14 +108,21 @@ export class OpenCodeAdapter {
             },
         });
 
+        // Debug log if result looks empty or contains error
+        if (!result || (result as any).error || (result as any).data === undefined) {
+            console.log(chalk?.dim ? chalk.dim(`[DEBUG] OpenCode result: ${JSON.stringify(result)}`) : `[DEBUG] OpenCode result: ${JSON.stringify(result)}`);
+        }
+
         // Extract content from result
         const content = this.extractContent(result);
+
+        const usage = (result as any).usage || (result as any).data?.usage || {};
 
         return {
             content,
             model: options.model || this.getModelNameFromConfig(modelConfig),
-            tokensUsed: (result as any).usage?.totalTokens || 0,
-            sessionId: this.currentSession.id,
+            tokensUsed: usage.totalTokens || 0,
+            sessionId: this.currentSession.id!,
         };
     }
 
@@ -122,11 +134,14 @@ export class OpenCodeAdapter {
             throw new Error("OpenCode not initialized");
         }
 
-        this.currentSession = await this.client.session.create({
+        const res = await this.client.session.create({
             body: { title: title || `Dark Factory Session ${Date.now()}` },
         });
 
-        return this.currentSession.id;
+        if (res.error) throw new Error(`Failed to create session: ${JSON.stringify(res.error)}`);
+        this.currentSession = res.data!;
+
+        return this.currentSession.id!;
     }
 
     /**
@@ -137,11 +152,12 @@ export class OpenCodeAdapter {
             throw new Error("OpenCode not initialized");
         }
 
-        const session = await this.client.session.get({
+        const res = await this.client.session.get({
             path: { id: sessionId },
         });
 
-        this.currentSession = session;
+        if (res.error) throw new Error(`Failed to get session: ${JSON.stringify(res.error)}`);
+        this.currentSession = res.data;
     }
 
     /**
@@ -155,7 +171,7 @@ export class OpenCodeAdapter {
      * Get the default model for a persona
      */
     getPersonaModel(persona: string): string {
-        return PERSONA_MODELS[persona] || PERSONA_MODELS.default;
+        return PERSONA_MODELS[persona] || PERSONA_MODELS.default || "gemini-3-pro-high";
     }
 
     /**
@@ -186,7 +202,7 @@ export class OpenCodeAdapter {
         }
 
         if (!modelName) {
-            modelName = PERSONA_MODELS.default;
+            modelName = "default";
         }
 
         const mapping = MODEL_MAP[modelName];
@@ -204,12 +220,32 @@ export class OpenCodeAdapter {
     private extractContent(result: any): string {
         if (!result) return "";
 
+        // Check for error in the wrapper
+        if (result.error) {
+            return `Error: ${JSON.stringify(result.error)}`;
+        }
+
+        // Unwrap data if present (common in generated SDKs)
+        const data = result.data !== undefined ? result.data : result;
+
+        if (!data) return "";
+
         // Handle different response formats
-        if (typeof result === "string") return result;
-        if (result.content) return result.content;
-        if (result.text) return result.text;
-        if (result.parts) {
-            return result.parts
+        if (typeof data === "string") return data;
+        if (data.content) return data.content;
+        if (data.text) return data.text;
+
+        // Handle AssistantMessage format
+        if (data.parts) {
+            return data.parts
+                .filter((p: any) => p.type === "text")
+                .map((p: any) => p.text)
+                .join("\n");
+        }
+
+        // Check for nested response in wrapper
+        if (data.response?.parts) {
+            return data.response.parts
                 .filter((p: any) => p.type === "text")
                 .map((p: any) => p.text)
                 .join("\n");

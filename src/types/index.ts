@@ -69,6 +69,7 @@ export type TaskStatus =
   | 'in_progress'
   | 'blocked'
   | 'completed'
+  | 'failed'
   | 'skipped';
 
 export interface TaskList {
