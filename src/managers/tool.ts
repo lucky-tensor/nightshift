@@ -1,6 +1,6 @@
 /**
  * Tool Manager
- * 
+ *
  * Defines and registers tools that the AI agent can use in its autonomy loop.
  */
 
@@ -20,10 +20,10 @@ export class ToolManager {
                 parameters: {
                     type: "object",
                     properties: {
-                        path: { type: "string", description: "Relative path to the file" }
+                        path: { type: "string", description: "Relative path to the file" },
                     },
-                    required: ["path"]
-                }
+                    required: ["path"],
+                },
             },
             {
                 name: "writeFile",
@@ -32,10 +32,10 @@ export class ToolManager {
                     type: "object",
                     properties: {
                         path: { type: "string", description: "Relative path to the file" },
-                        content: { type: "string", description: "Content to write" }
+                        content: { type: "string", description: "Content to write" },
                     },
-                    required: ["path", "content"]
-                }
+                    required: ["path", "content"],
+                },
             },
             {
                 name: "runCommand",
@@ -43,11 +43,11 @@ export class ToolManager {
                 parameters: {
                     type: "object",
                     properties: {
-                        command: { type: "string", description: "Shell command to execute" }
+                        command: { type: "string", description: "Shell command to execute" },
                     },
-                    required: ["command"]
-                }
-            }
+                    required: ["command"],
+                },
+            },
         ];
     }
 
@@ -59,7 +59,8 @@ export class ToolManager {
 
         switch (name) {
             case "readFile":
-                if (!existsSync(fullPath(args.path))) return `Error: File not found at ${args.path}`;
+                if (!existsSync(fullPath(args.path)))
+                    return `Error: File not found at ${args.path}`;
                 return readFileSync(fullPath(args.path), "utf-8");
 
             case "writeFile":
@@ -68,7 +69,10 @@ export class ToolManager {
 
             case "runCommand":
                 try {
-                    const output = execSync(args.command, { cwd: worktreePath, timeout: 60000 }).toString();
+                    const output = execSync(args.command, {
+                        cwd: worktreePath,
+                        timeout: 60000,
+                    }).toString();
                     return output || "Command executed successfully (no output).";
                 } catch (error) {
                     return `Error executing command: ${(error as any).stderr?.toString() || (error as any).message}`;

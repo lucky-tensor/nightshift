@@ -1,15 +1,15 @@
 /**
  * Agent Runtime
- * 
- * Drives the autonomy loop for a specific task using a persona.
+ *
+ * Drives the autonomy loop for a specific task using a subagent.
  */
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { getOpenCodeAdapter } from "../adapter/opencode";
 import { FinanceManager } from "../managers/finance";
-import type { Project, Task, PersonaConfig } from "../types";
-import chalk from "chalk";
+import type { ProjectSession, TaskPrompt } from "../types";
+import { logInfo, logSuccess, logError } from "../utils/helpers";
 
 export interface AgentRunResult {
     success: boolean;
@@ -20,53 +20,90 @@ export interface AgentRunResult {
 
 export class AgentRuntime {
     /**
-     * Run the autonomy loop for a single task
+     * Execute a task using an AI agent with a specific subagent
+     *
+     * This is the core execution engine for Dark Factory. It:
+     * 1. Loads the subagent template
+     * 2. Creates an isolated session
+     * 3. Sends the task to the LLM
+     * 4. Records costs and token usage
+     * 5. Returns execution results
+     *
+     * In the current MVP implementation, this is a single-turn conversation.
+     * Future versions will implement multi-turn agentic loops with tool usage.
+     *
+     * @param project - The project context
+     * @param task - The task to execute
+     * @param subagent - Subagent template to use (default: "engineer")
+     * @returns Execution result with success status, message, tokens, and cost
+     *
+     * @example
+     * ```typescript
+     * const runtime = new AgentRuntime();
+     * const result = await runtime.runTask(project, task, "engineer");
+     * if (result.success) {
+     *   console.log(`Task completed! Cost: $${result.cost}`);
+     * }
+     * ```
      */
-    async runTask(project: Project, task: Task, persona: string = "engineer"): Promise<AgentRunResult> {
+    async runTask(
+        project: ProjectSession,
+        task: TaskPrompt,
+        subagent: string = "engineer"
+    ): Promise<AgentRunResult> {
         const adapter = getOpenCodeAdapter();
         await adapter.initialize();
 
-        console.log(chalk.blue(`[Agent] Starting task: ${chalk.bold(task.title)} as ${chalk.bold(persona)}`));
+        logInfo(`[Agent] Starting task: ${task.title} as ${subagent}`);
 
-        // 1. Prepare Persona
-        const template = this.loadTemplate(persona);
+        // 1. Prepare Subagent
+        const template = this.loadTemplate(subagent);
         const systemPrompt = this.renderTemplate(template, { project, task });
 
         // 2. Initialize Session
-        const sessionId = await adapter.createSession(`Project: ${project.name} | Task: ${task.title}`);
+        await adapter.createSession(`Project: ${project.name} | Task: ${task.title}`);
 
         // 3. Autonomy Loop (Simplified for MVP)
-        // In a full implementation, this would be a multi-turn conversation 
-        // where the agent uses tools. For now, we'll send the prompt and 
-        // expect the agent (via OpenCode's own agentic capability if enabled) 
+        // In a full implementation, this would be a multi-turn conversation
+        // where the agent uses tools. For now, we'll send the prompt and
+        // expect the agent (via OpenCode's own agentic capability if enabled)
         // to perform the task.
 
         try {
             const finance = new FinanceManager();
-            const category = finance.getCategoryForPersona(persona);
+            const category = finance.getCategoryForPersona(subagent);
             const model = finance.getOptimalModel(category);
 
             const response = await adapter.sendMessage(systemPrompt, {
-                persona,
-                model: model
+                persona: subagent,
+                model: model,
+                tools: {
+                    // Enable standard tools if available in the environment
+                    bash: true,
+                    read: true,
+                    write: true,
+                    edit: true,
+                    glob: true,
+                    grep: true,
+                },
             });
 
             const cost = finance.recordOperation(model, response.tokensUsed);
-            console.log(chalk.green(`[Agent] Task execution completed. Cost: $${cost.toFixed(4)}`));
+            logSuccess(`[Agent] Task execution completed. Cost: $${cost.toFixed(4)}`);
 
             return {
                 success: true,
                 message: response.content,
                 tokensUsed: response.tokensUsed,
-                cost: cost
+                cost: cost,
             };
         } catch (error) {
-            console.error(chalk.red(`[Agent] Task execution failed:`), error);
+            logError(`[Agent] Task execution failed: ${error}`);
             return {
                 success: false,
                 message: String(error),
                 tokensUsed: 0,
-                cost: 0
+                cost: 0,
             };
         } finally {
             // await adapter.shutdown(); // Keep alive for next task or shutdown later
@@ -74,20 +111,41 @@ export class AgentRuntime {
     }
 
     /**
-     * Load persona template
+     * Load subagent template from disk
+     *
+     * Subagent templates are markdown files that define the agent's behavior,
+     * skills, and objectives. They support variable substitution for dynamic content.
+     *
+     * @param subagent - Subagent name (e.g., "engineer", "tester", "reviewer")
+     * @returns Template content as string
+     * @throws Error if template file not found
      */
-    private loadTemplate(persona: string): string {
-        const path = join(process.cwd(), "templates", `${persona}.md`);
+    private loadTemplate(subagent: string): string {
+        const path = join(process.cwd(), "templates", `${subagent}.md`);
         if (!existsSync(path)) {
-            throw new Error(`Template not found for persona: ${persona}`);
+            throw new Error(`Template not found for subagent: ${subagent}`);
         }
         return readFileSync(path, "utf-8");
     }
 
     /**
-     * Basic template engine (variable substitution)
+     * Render a template with variable substitution
+     *
+     * Replaces template variables with actual values from project and task data.
+     * Supports the following variables:
+     * - {{project.name}} - Project name
+     * - {{project.description}} - Project description
+     * - {{task.title}} - Task title
+     * - {{task.description}} - Task description
+     *
+     * @param template - Template string with {{variables}}
+     * @param data - Data object containing project and task
+     * @returns Rendered template string
      */
-    private renderTemplate(template: string, data: { project: Project, task: Task }): string {
+    private renderTemplate(
+        template: string,
+        data: { project: ProjectSession; task: TaskPrompt }
+    ): string {
         let rendered = template;
 
         // Replace {{project.*}}

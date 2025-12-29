@@ -37,8 +37,8 @@ describe("OpenCode Adapter Integration Tests", () => {
 
             // Check if any of the expected models are present
             const expectedPatterns = ["gemini-3", "claude-sonnet", "claude-opus"];
-            const found = expectedPatterns.some(pattern =>
-                models.some(m => m.toLowerCase().includes(pattern))
+            const found = expectedPatterns.some((pattern) =>
+                models.some((m) => m.toLowerCase().includes(pattern))
             );
 
             expect(found).toBe(true);
@@ -115,16 +115,14 @@ describe("OpenCode Adapter Integration Tests", () => {
 
         test("should handle multiple sessions independently", async () => {
             const session1Id = await adapter.createSession("Session 1");
-            await adapter.sendMessage(
-                "Remember the color 'red'. Just say 'OK'.",
-                { model: "gemini-3-flash" }
-            );
+            await adapter.sendMessage("Remember the color 'red'. Just say 'OK'.", {
+                model: "gemini-3-flash",
+            });
 
             const session2Id = await adapter.createSession("Session 2");
-            await adapter.sendMessage(
-                "Remember the color 'blue'. Just say 'OK'.",
-                { model: "gemini-3-flash" }
-            );
+            await adapter.sendMessage("Remember the color 'blue'. Just say 'OK'.", {
+                model: "gemini-3-flash",
+            });
 
             expect(session1Id).not.toBe(session2Id);
 
@@ -142,10 +140,9 @@ describe("OpenCode Adapter Integration Tests", () => {
     describe("Error Handling", () => {
         test("should handle invalid model gracefully", async () => {
             try {
-                const response = await adapter.sendMessage(
-                    "Test message",
-                    { model: "non-existent-model-xyz" }
-                );
+                const response = await adapter.sendMessage("Test message", {
+                    model: "non-existent-model-xyz",
+                });
                 expect(response).toBeDefined();
             } catch (error) {
                 expect(error).toBeDefined();

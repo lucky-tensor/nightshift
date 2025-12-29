@@ -1,35 +1,47 @@
 {
-  "name": "dark-factory",
-  "version": "0.1.0",
-  "description": "Autonomous AI Agent Orchestration for Antigravity IDE",
-  "type": "module",
-  "private": true,
-  "bin": {
-    "df": "./src/cli/index.ts"
-  },
-  "scripts": {
-    "df": "bun run src/cli/index.ts",
-    "test": "bun test",
-    "lint": "bunx eslint src/",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^25.0.3",
-    "@types/uuid": "^11.0.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@opencode-ai/sdk": "^1.0.203",
-    "chalk": "^5.6.2",
-    "cli-table3": "^0.6.5",
-    "commander": "^14.0.2",
-    "dotenv": "^17.2.3",
-    "enquirer": "^2.4.1",
-    "ora": "^9.0.0",
-    "uuid": "^13.0.0",
-    "yaml": "^2.8.2"
-  }
+    "name": "dark-factory",
+    "version": "0.1.0",
+    "description": "Autonomous AI Agent Orchestration for Antigravity IDE",
+    "type": "module",
+    "main": "./src/plugin/index.ts",
+    "exports": {
+        ".": "./src/plugin/index.ts",
+        "./cli": "./src/cli/index.ts"
+    },
+    "private": true,
+    "bin": {
+        "df": "./src/cli/index.ts"
+    },
+    "scripts": {
+        "df": "bun run src/cli/index.ts",
+        "test": "bun test",
+        "lint": "bunx eslint src/",
+        "format": "bunx prettier --write \"src/**/*.ts\"",
+        "format:check": "bunx prettier --check \"src/**/*.ts\"",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.2",
+        "@types/bun": "latest",
+        "@types/node": "^25.0.3",
+        "@types/uuid": "^11.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.50.1",
+        "@typescript-eslint/parser": "^8.50.1",
+        "eslint": "^9.39.2",
+        "prettier": "^3.7.4"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@opencode-ai/sdk": "^1.0.203",
+        "chalk": "^5.6.2",
+        "cli-table3": "^0.6.5",
+        "commander": "^14.0.2",
+        "dotenv": "^17.2.3",
+        "enquirer": "^2.4.1",
+        "ora": "^9.0.0",
+        "uuid": "^13.0.0",
+        "yaml": "^2.8.2"
+    }
 }

@@ -1,13 +1,13 @@
 /**
  * YAML Storage Engine
- * 
+ *
  * Provides type-safe YAML file persistence for Dark Factory state.
  * Uses atomic writes and file locking for safety.
  */
 
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { homedir } from "os";
 
 // Default storage directory
@@ -64,7 +64,7 @@ export class YamlRepository<T> {
 
         try {
             const content = readFileSync(this.filePath, "utf-8");
-            const data = parseYaml(content) as Record<string, T> || {};
+            const data = (parseYaml(content) as Record<string, T>) || {};
             this.cache = new Map(Object.entries(data));
             this.cacheValid = true;
             return new Map(this.cache);
@@ -198,25 +198,31 @@ export class YamlRepository<T> {
 // Specialized Repositories
 // ============================================================================
 
-import type { Project, TaskItem, SimpleFinanceState } from "../types";
+import type {
+    ProjectSession,
+    TaskPrompt,
+    SimpleFinanceState,
+    Factory,
+    Product,
+    Plan,
+    KnowledgeEntry,
+} from "../types";
 
 /**
  * Project storage
  */
-export class ProjectRepository extends YamlRepository<Project> {
+export class ProjectRepository extends YamlRepository<ProjectSession> {
     constructor(options: StorageOptions = {}) {
         super("projects.yaml", options);
     }
 
-    findByStatus(status: Project["status"]): Project[] {
+    findByStatus(status: ProjectSession["status"]): ProjectSession[] {
         return this.find((p) => p.status === status);
     }
 
-    getActive(): Project[] {
-        return this.find((p) =>
-            p.status === "initializing" ||
-            p.status === "active" ||
-            p.status === "paused"
+    getActive(): ProjectSession[] {
+        return this.find(
+            (p) => p.status === "initializing" || p.status === "active" || p.status === "paused"
         );
     }
 }
@@ -224,32 +230,32 @@ export class ProjectRepository extends YamlRepository<Project> {
 /**
  * Task storage (per-project)
  */
-export class TaskRepository extends YamlRepository<TaskItem[]> {
+export class TaskRepository extends YamlRepository<TaskPrompt[]> {
     constructor(projectId: string, options: StorageOptions = {}) {
         const baseDir = options.baseDir || join(homedir(), ".dark-factory");
         super(`tasks/${projectId}.yaml`, { baseDir });
     }
 
-    getTasks(): TaskItem[] {
+    getTasks(): TaskPrompt[] {
         return this.get("tasks") || [];
     }
 
-    saveTasks(tasks: TaskItem[]): void {
+    saveTasks(tasks: TaskPrompt[]): void {
         this.save("tasks", tasks);
     }
 
-    addTask(task: TaskItem): void {
+    addTask(task: TaskPrompt): void {
         const tasks = this.getTasks();
         tasks.push(task);
         this.saveTasks(tasks);
     }
 
-    updateTask(taskId: string, updates: Partial<TaskItem>): TaskItem | undefined {
+    updateTask(taskId: string, updates: Partial<TaskPrompt>): TaskPrompt | undefined {
         const tasks = this.getTasks();
         const index = tasks.findIndex((t) => t.id === taskId);
         if (index === -1) return undefined;
 
-        const updated: TaskItem = { ...tasks[index], ...updates } as TaskItem;
+        const updated: TaskPrompt = { ...tasks[index], ...updates } as TaskPrompt;
         tasks[index] = updated;
         this.saveTasks(tasks);
         return updated;
@@ -308,6 +314,105 @@ export class FinanceRepository extends YamlRepository<SimpleFinanceState> {
     }
 }
 
+/**
+ * Factory storage (singleton state)
+ */
+export class FactoryRepository extends YamlRepository<Factory> {
+    constructor(options: StorageOptions = {}) {
+        super("factory.yaml", options);
+    }
+
+    getState(): Factory | undefined {
+        return this.get("state");
+    }
+
+    saveState(state: Factory): void {
+        this.save("state", state);
+    }
+}
+
+/**
+ * Product storage
+ */
+export class ProductRepository extends YamlRepository<Product> {
+    constructor(options: StorageOptions = {}) {
+        super("products.yaml", options);
+    }
+
+    findByFactory(factoryId: string): Product[] {
+        return this.find((p) => p.factoryId === factoryId);
+    }
+
+    findByStatus(status: Product["status"]): Product[] {
+        return this.find((p) => p.status === status);
+    }
+}
+
+/**
+ * Plan storage (per-product)
+ */
+export class PlanRepository extends YamlRepository<Plan> {
+    constructor(productId: string, options: StorageOptions = {}) {
+        const baseDir = options.baseDir || join(homedir(), ".dark-factory");
+        super(`plans/${productId}.yaml`, { baseDir });
+    }
+
+    getPlan(): Plan | undefined {
+        return this.get("plan");
+    }
+
+    savePlan(plan: Plan): void {
+        this.save("plan", plan);
+    }
+
+    updatePlan(updates: Partial<Plan>): Plan | undefined {
+        const existing = this.getPlan();
+        if (!existing) return undefined;
+
+        const updated: Plan = {
+            ...existing,
+            ...updates,
+            version: existing.version + 1,
+            updatedAt: new Date().toISOString(),
+        };
+
+        this.savePlan(updated);
+        return updated;
+    }
+}
+
+/**
+ * Knowledge Base storage (per-product)
+ */
+export class KnowledgeBaseRepository extends YamlRepository<KnowledgeEntry[]> {
+    constructor(productId: string, options: StorageOptions = {}) {
+        const baseDir = options.baseDir || join(homedir(), ".dark-factory");
+        super(`knowledge/${productId}.yaml`, { baseDir });
+    }
+
+    getEntries(): KnowledgeEntry[] {
+        return this.get("entries") || [];
+    }
+
+    saveEntries(entries: KnowledgeEntry[]): void {
+        this.save("entries", entries);
+    }
+
+    addEntry(entry: KnowledgeEntry): void {
+        const entries = this.getEntries();
+        entries.push(entry);
+        this.saveEntries(entries);
+    }
+
+    findByProject(projectId: string): KnowledgeEntry[] {
+        return this.getEntries().filter((e) => e.projectId === projectId);
+    }
+
+    findUnmerged(): KnowledgeEntry[] {
+        return this.getEntries().filter((e) => !e.mergedToMain);
+    }
+}
+
 // ============================================================================
 // Storage Manager (Central access point)
 // ============================================================================
@@ -316,7 +421,11 @@ export class StorageManager {
     private baseDir: string;
     private _projects: ProjectRepository | null = null;
     private _finance: FinanceRepository | null = null;
+    private _factory: FactoryRepository | null = null;
+    private _products: ProductRepository | null = null;
     private _taskRepos: Map<string, TaskRepository> = new Map();
+    private _planRepos: Map<string, PlanRepository> = new Map();
+    private _knowledgeRepos: Map<string, KnowledgeBaseRepository> = new Map();
 
     constructor(baseDir?: string) {
         this.baseDir = baseDir || DEFAULT_STORAGE_DIR;
@@ -336,6 +445,20 @@ export class StorageManager {
         return this._finance;
     }
 
+    get factory(): FactoryRepository {
+        if (!this._factory) {
+            this._factory = new FactoryRepository({ baseDir: this.baseDir });
+        }
+        return this._factory;
+    }
+
+    get products(): ProductRepository {
+        if (!this._products) {
+            this._products = new ProductRepository({ baseDir: this.baseDir });
+        }
+        return this._products;
+    }
+
     tasks(projectId: string): TaskRepository {
         if (!this._taskRepos.has(projectId)) {
             this._taskRepos.set(
@@ -346,11 +469,36 @@ export class StorageManager {
         return this._taskRepos.get(projectId)!;
     }
 
+    plan(productId: string): PlanRepository {
+        if (!this._planRepos.has(productId)) {
+            this._planRepos.set(
+                productId,
+                new PlanRepository(productId, { baseDir: this.baseDir })
+            );
+        }
+        return this._planRepos.get(productId)!;
+    }
+
+    knowledge(productId: string): KnowledgeBaseRepository {
+        if (!this._knowledgeRepos.has(productId)) {
+            this._knowledgeRepos.set(
+                productId,
+                new KnowledgeBaseRepository(productId, { baseDir: this.baseDir })
+            );
+        }
+        return this._knowledgeRepos.get(productId)!;
+    }
+
     /**
      * Ensure storage directory structure exists
      */
     initialize(): void {
-        const dirs = [this.baseDir, join(this.baseDir, "tasks")];
+        const dirs = [
+            this.baseDir,
+            join(this.baseDir, "tasks"),
+            join(this.baseDir, "plans"),
+            join(this.baseDir, "knowledge"),
+        ];
         for (const dir of dirs) {
             if (!existsSync(dir)) {
                 mkdirSync(dir, { recursive: true });
