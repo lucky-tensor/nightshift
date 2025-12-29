@@ -31,9 +31,10 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                    LLM Provider Layer                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   OpenAI     │  │  Anthropic   │  │    Custom    │      │
-│  │   Adapter    │  │   Adapter    │  │   Adapters   │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│  │ Antigravity  │  │   OpenAI     │  │  Anthropic   │      │
+│  │ CLI Adapter  │  │   Adapter    │  │   Adapter    │      │
+│  │  (Primary)   │  └──────────────┘  └──────────────┘      │
+│  └──────────────┘                                           │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -897,7 +898,309 @@ interface AgentRuntime {
   // Quality gates
   validateQualityGates(agentId: string): Promise<QualityReport>;
 }
+
+// LLM Provider API
+interface LLMProvider {
+  // Provider metadata
+  getName(): string;
+  getModel(): string;
+  
+  // Chat operations
+  sendMessage(message: string, context?: ConversationContext): Promise<LLMResponse>;
+  streamMessage(message: string, context?: ConversationContext): AsyncIterator<LLMStreamChunk>;
+  
+  // Health and quota
+  probe(): Promise<ProviderHealth>;
+  checkQuota(): Promise<QuotaInfo>;
+  
+  // Cost tracking
+  estimateCost(tokens: number): number;
+  
+  // Conversation management
+  exportConversation(): Promise<ConversationExport>;
+  importConversation(data: ConversationExport): Promise<void>;
+}
+
+interface ConversationContext {
+  history: Message[];
+  systemPrompt?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+interface LLMResponse {
+  content: string;
+  tokens: {
+    prompt: number;
+    completion: number;
+    total: number;
+  };
+  cost: number;
+  model: string;
+  finishReason: 'stop' | 'length' | 'error';
+}
+
+interface LLMStreamChunk {
+  content: string;
+  done: boolean;
+}
+
+interface ProviderHealth {
+  available: boolean;
+  quotaRemaining?: number;
+  error?: string;
+  responseTimeMs: number;
+}
+
+interface QuotaInfo {
+  remaining: number;      // USD or tokens remaining
+  total: number;          // Total quota
+  resetAt?: Date;         // When quota resets
+  unit: 'usd' | 'tokens'; // What unit quota is measured in
+}
+
+interface ConversationExport {
+  provider: string;
+  model: string;
+  messages: Message[];
+  metadata: {
+    exportedAt: Date;
+    totalTokens: number;
+    totalCost: number;
+  };
+}
+
 ```
+
+### 4.4 Antigravity CLI Adapter
+
+The Antigravity CLI adapter is the **primary LLM provider** for Dark Factory. It interfaces with Antigravity IDE via its command-line interface.
+
+#### 4.4.1 Adapter Implementation
+
+```typescript
+class AntigravityCLIAdapter implements LLMProvider {
+  private cliPath: string = '/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity';
+  private conversationHistory: Message[] = [];
+  
+  getName(): string {
+    return 'antigravity';
+  }
+  
+  getModel(): string {
+    // Antigravity uses Gemini models
+    // TODO: Determine how to query current model
+    return 'gemini-pro';
+  }
+  
+  async sendMessage(message: string, context?: ConversationContext): Promise<LLMResponse> {
+    // Build command
+    const args = ['chat', '--mode', 'agent'];
+    
+    // Add context files if specified
+    if (context?.history) {
+      // TODO: Determine how to maintain conversation context
+      // Option 1: Use --reuse-window flag
+      // Option 2: Re-send conversation history
+      // Option 3: Export/import conversation state
+    }
+    
+    // Execute command
+    const result = await this.executeCommand(args, message);
+    
+    // Parse response
+    return this.parseResponse(result);
+  }
+  
+  async probe(): Promise<ProviderHealth> {
+    const startTime = Date.now();
+    
+    try {
+      // Minimal request to check availability
+      const result = await this.executeCommand(
+        ['chat', '--mode', 'ask'],
+        'test'
+      );
+      
+      const responseTimeMs = Date.now() - startTime;
+      
+      // Check for quota errors
+      const quotaExhausted = this.detectQuotaError(result.stderr);
+      
+      return {
+        available: !quotaExhausted && result.exitCode === 0,
+        quotaRemaining: undefined, // TODO: Determine how to check quota
+        error: quotaExhausted ? 'Quota exhausted' : undefined,
+        responseTimeMs
+      };
+    } catch (error) {
+      return {
+        available: false,
+        error: error.message,
+        responseTimeMs: Date.now() - startTime
+      };
+    }
+  }
+  
+  async checkQuota(): Promise<QuotaInfo> {
+    // TODO: CRITICAL - Determine how to check quota
+    // Possible approaches:
+    // 1. Check for quota API/command
+    // 2. Parse error messages
+    // 3. Track usage locally
+    throw new Error('Not implemented - see TECHNICAL_QUESTIONS.md Q1');
+  }
+  
+  private detectQuotaError(stderr: string): boolean {
+    // TODO: CRITICAL - Determine quota error patterns
+    // Need to test what error message appears when quota exhausted
+    const quotaPatterns = [
+      /quota.*exceeded/i,
+      /rate.*limit/i,
+      /insufficient.*credits/i,
+      // Add more patterns based on investigation
+    ];
+    
+    return quotaPatterns.some(pattern => pattern.test(stderr));
+  }
+  
+  async exportConversation(): Promise<ConversationExport> {
+    // TODO: Determine how to export conversation state
+    // See TECHNICAL_QUESTIONS.md Q3
+    return {
+      provider: 'antigravity',
+      model: this.getModel(),
+      messages: this.conversationHistory,
+      metadata: {
+        exportedAt: new Date(),
+        totalTokens: this.calculateTotalTokens(),
+        totalCost: this.calculateTotalCost()
+      }
+    };
+  }
+  
+  async importConversation(data: ConversationExport): Promise<void> {
+    // TODO: Determine how to import conversation state
+    // Options:
+    // 1. Re-send all messages to establish context
+    // 2. Use Antigravity's conversation import (if exists)
+    this.conversationHistory = data.messages;
+  }
+  
+  private async executeCommand(args: string[], input: string): Promise<CommandResult> {
+    // Execute antigravity CLI command
+    // Handle stdin for piped input
+    // Capture stdout, stderr, exit code
+    // See TECHNICAL_QUESTIONS.md Q4 for exit code mapping
+  }
+}
+
+interface CommandResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+```
+
+#### 4.4.2 Critical Requirements
+
+**BLOCKER: Quota Detection (Q1)**
+- Must detect when Antigravity quota is exhausted
+- Required for Finance Manager to trigger provider switching
+- Investigation needed: Error patterns, quota API, noop probe behavior
+
+**BLOCKER: Provider Switching (Q2)**
+- Must support switching to different provider mid-conversation
+- Required for autonomous operation when quota exhausted
+- Investigation needed: Conversation export/import, context preservation
+
+**HIGH PRIORITY: State Management (Q3)**
+- Should persist conversation state across restarts
+- Needed for pause/resume functionality
+- Investigation needed: Conversation storage location, programmatic access
+
+**HIGH PRIORITY: Error Handling (Q4)**
+- Must classify different error types (quota, network, invalid input)
+- Needed for appropriate error recovery
+- Investigation needed: Exit codes, error message patterns
+
+#### 4.4.3 Antigravity CLI Usage
+
+```bash
+# Basic agent invocation
+antigravity chat --mode agent "Implement feature X"
+
+# With file context
+antigravity chat --mode agent "Fix bug" -a src/file.ts
+
+# Piped input
+cat error.log | antigravity chat --mode agent "Debug this" -
+
+# Window management
+antigravity chat --reuse-window "Continue task"
+antigravity chat --new-window "New task"
+```
+
+#### 4.4.4 Configuration
+
+```yaml
+# ~/.dark-factory/providers.yaml
+providers:
+  - id: antigravity-primary
+    name: antigravity
+    type: cli
+    enabled: true
+    priority: 1
+    config:
+      cli_path: /Applications/Antigravity.app/Contents/Resources/app/bin/antigravity
+      mode: agent
+      window_strategy: reuse  # reuse | new
+      
+  - id: openai-fallback
+    name: openai
+    model: gpt-4
+    enabled: true
+    priority: 2
+    config:
+      api_key: encrypted:...
+      
+  - id: anthropic-fallback
+    name: anthropic
+    model: claude-3-opus
+    enabled: true
+    priority: 3
+    config:
+      api_key: encrypted:...
+```
+
+#### 4.4.5 Open Questions
+
+See [TECHNICAL_QUESTIONS.md](./TECHNICAL_QUESTIONS.md) for detailed investigation plan:
+
+1. **Q1: Quota Detection** 🔴 BLOCKER
+   - How to detect quota exhaustion?
+   - Can we check remaining quota?
+   - Do noop probes work reliably?
+
+2. **Q2: Provider Switching** 🔴 BLOCKER
+   - Can we switch providers mid-conversation?
+   - How to preserve conversation context?
+   - What's the provider configuration mechanism?
+
+3. **Q3: State Management** 🟡 HIGH PRIORITY
+   - Where is conversation state stored?
+   - Can we save/restore programmatically?
+   - Does state persist across restarts?
+
+4. **Q4: Exit Codes** 🟡 HIGH PRIORITY
+   - What exit codes does Antigravity use?
+   - How to distinguish error types?
+   - What error patterns exist?
+
+5. **Q5: Performance** 🟢 MEDIUM PRIORITY
+   - What are typical response times?
+   - What are rate limit thresholds?
+   - How to optimize noop probes?
 
 ## 5. Security Considerations
 
