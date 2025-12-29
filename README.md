@@ -1,170 +1,179 @@
-# Dark Factory
+# Dark Factory Plugin for OpenCode
 
-A TypeScript-based orchestration tool for Antigravity IDE that enables autonomous, long-running AI agents to complete large software projects.
+Autonomous AI Agent Orchestration for Antigravity IDE (OpenCode).
 
-## Overview
+Dark Factory is a plugin for **OpenCode** that enables autonomous, long-running AI agents to complete large software projects. It provides a "Factory" environment where multiple projects and tasks can be orchestrated by specialized sub-agents (Engineer, Tester, PM).
 
-Dark Factory allows AI agents to work autonomously for up to 12 hours on complex coding tasks, handling:
-- **Automatic cost management** - Switches between LLM providers when credits run low
-- **Decision branching** - Explores multiple solution paths in parallel when uncertain
-- **Quality assurance** - Enforces tests, linting, and formatting before completion
-- **Isolated environments** - Uses git worktrees to prevent pollution
-- **Task management** - Autonomous project manager persona audits progress
+## Features
 
-## Key Features
+- 🤖 **Autonomous Agents** - Run complex tasks without constant supervision
+- 💰 **Finance Management** - Track costs and manage token budgets
+- 📦 **Project Isolation** - Uses git worktrees to keep agent work separate from your main branch
+- 🏭 **Factory Management** - Orchestrate multiple concurrent projects
 
-- 🤖 **Autonomous Agents** - Work for hours without human intervention
-- 💰 **Finance Management** - Auto-switch providers, handle rate limits gracefully
-- 🌳 **Decision Branching** - Explore up to 2 solution paths in parallel
-- ✅ **Quality Gates** - Tests, linting, formatting enforced automatically
-- 📋 **Task Tracking** - PM persona keeps task lists accurate
-- 🔒 **Safety** - Cannot push to remote repos, 12-hour hard timeout
+## Installation
 
-## Status
+This is an **OpenCode Plugin**. It must be installed into your OpenCode environment.
 
-🚧 **In Development** - Currently in planning phase
-
-See [IMPLEMENTATION_PLAN.md](./docs/IMPLEMENTATION_PLAN.md) for development roadmap.
-
-## Documentation
-
-- [PRD.md](./docs/PRD.md) - Product Requirements Document
-- [SPEC.md](./docs/SPEC.md) - Technical Specification
-- [IMPLEMENTATION_PLAN.md](./docs/IMPLEMENTATION_PLAN.md) - Implementation Plan
-
-## Requirements
-
-- **Bun**: >= 1.0.0
-- **Git**: >= 2.25.0 (for worktree support)
-- **OS**: macOS, Linux, or Windows WSL
-
-## Installation (Coming Soon)
+### 1. Build the Plugin
 
 ```bash
-bun install -g @dark-factory/cli
-
-# Initialize config
-df setup
-
-# Configure LLM provider
-df provider add --name openai --model gpt-4 --api-key $OPENAI_KEY
+bun install
+bun run build
 ```
 
-## Quick Start (Coming Soon)
+This generates a `dist/index.js` file.
+
+### 2. Install into OpenCode
+
+You can install the plugin globally or per-project.
+
+**Global Installation:**
+Link the built plugin to your global OpenCode config:
 
 ```bash
-# Create a new project
-df init my-feature \
-  --description "Add user authentication" \
-  --persona engineer,tester
-
-# Start autonomous work
-df start my-feature
-
-# Check status
-df status my-feature
-
-# View task list
-df tasks my-feature
+mkdir -p ~/.config/opencode/plugin
+ln -s $(pwd)/dist/index.js ~/.config/opencode/plugin/dark-factory.js
 ```
 
-## Architecture
+**Project Installation:**
+Copy or link the plugin to your project's `.opencode/plugin` directory:
 
-```
-┌─────────────────────────────────────────┐
-│       Orchestration Engine              │
-│  ┌──────────┐  ┌──────────┐  ┌────────┐│
-│  │ Project  │  │ Finance  │  │  Git   ││
-│  │ Manager  │  │ Manager  │  │Manager ││
-│  └──────────┘  └──────────┘  └────────┘│
-└─────────────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────┐
-│          Agent Runtime                  │
-│  ┌──────────┐  ┌──────────┐            │
-│  │ Persona  │  │ Quality  │            │
-│  │ Loader   │  │  Gates   │            │
-│  └──────────┘  └──────────┘            │
-└─────────────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────┐
-│       LLM Provider Layer                │
-│  OpenCode SDK + Antigravity OAuth       │
-│  (Gemini 3, Claude 4.5 via Antigravity) │
-└─────────────────────────────────────────┘
+```bash
+mkdir -p .opencode/plugin
+cp dist/index.js .opencode/plugin/dark-factory.js
 ```
 
-## Core Concepts
+### 3. Install Commands (Optional)
 
-### Personas
-Markdown templates that define agent behavior and acceptance criteria. Built-in personas:
-- **Engineer** - Feature development, refactoring
-- **Tester** - Test writing, coverage improvement
-- **Reviewer** - Code review, quality checks
-- **Project Manager** - Task tracking, progress auditing
+To enable slash commands like `/factory`, `/project`, and `/task`, copy the command definitions to your configuration.
 
-### Decision Branching
-When agents face low-confidence decisions, Dark Factory automatically:
-1. Creates 2 parallel branches in separate worktrees
-2. Explores each option independently
-3. Generates comparison reports
-4. Lets you choose the best approach
+**Global:**
 
-### Finance Persona
-Special persona that:
-- Monitors API credits via noop probes
-- Switches providers when credits exhausted
-- Enters polling mode if no providers available
-- Resumes automatically when provider recovers
+```bash
+mkdir -p ~/.config/opencode/command
+cp commands/*.md ~/.config/opencode/command/
+```
+
+**Project:**
+
+```bash
+mkdir -p .opencode/command
+cp commands/*.md .opencode/command/
+```
+
+### 4. Install Templates
+
+Dark Factory uses subagent templates to configure AI behavior. Copy the template files to your global OpenCode config:
+
+```bash
+mkdir -p ~/.config/opencode/plugin/dark-factory/templates
+cp templates/*.md ~/.config/opencode/plugin/dark-factory/templates/
+```
+
+Templates define how different agent personas (engineer, tester, PM, etc.) approach tasks. See [TEMPLATES.md](./TEMPLATES.md) for customization options.
+
+## Usage
+
+Once installed, Dark Factory exposes several tools to OpenCode. You can invoke them via the OpenCode chat interface.
+
+### Initialize the Factory
+
+Ask OpenCode:
+
+> "Initialize the Dark Factory with a budget of $50"
+
+Or use the slash command:
+
+```
+/factory init --budgetLimit 50
+```
+
+### Create a Project
+
+Ask OpenCode:
+
+> "Create a new project called 'auth-service' to implement JWT authentication"
+
+Or use the slash command:
+
+```
+/project create auth-service "Implement JWT authentication"
+```
+
+**What happens:** Dark Factory creates an isolated git worktree for this project, keeping agent work separate from your main branch.
+
+### Run a Task
+
+Ask OpenCode:
+
+> "Add a task to 'auth-service' to setup the project structure, then run it"
+
+Or use the slash command:
+
+```
+/task run --projectId [id]
+```
+
+**What happens:** Dark Factory spawns a new OpenCode session that you can monitor through the standard OpenCode session UI. The agent works autonomously in the isolated worktree.
+
+## How It Works
+
+### Git Worktree Isolation
+
+Each project runs in its own git worktree, which creates a separate working directory linked to a new branch. This keeps agent work isolated from your main branch.
+
+- **Automatic setup**: When you create a project, Dark Factory automatically creates a worktree as a sibling to your project directory (e.g., if your project is at `my_project/`, worktrees appear alongside it as `worktree_df_task_<id>/`)
+- **Branch naming**: Projects use the branch pattern `df/task/{project-id}`
+- **Safe experimentation**: Agents can make changes without affecting your current work
+
+**Example Directory Structure:**
+```
+parent_directory/
+  my_project/              # Your main project
+  worktree_df_task_abc123/ # Dark Factory worktree 1
+  worktree_df_task_def456/ # Dark Factory worktree 2
+```
+
+### Merging Work Back
+
+**Dark Factory requires human review before merging.** When a task completes:
+
+1. Review the agent's work in the project's worktree or branch
+2. Test the changes as needed
+3. Manually merge the branch when satisfied:
+   ```bash
+   git merge df/task/{project-id}
+   ```
+4. Delete the project to clean up the worktree:
+   ```
+   /project delete {project-id}
+   ```
+
+### Session Monitoring
+
+When agents run tasks, they create standard OpenCode sessions that appear in your OpenCode UI. You can:
+
+- Monitor agent progress in real-time
+- See tool calls and output as they happen
+- View the full conversation history
+- Interrupt or stop sessions if needed
+
+Sessions are created with titles like `Dark Factory: {project-name} - {task-title}` for easy identification.
 
 ## Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/dark-factory.git
-cd dark-factory
-
 # Install dependencies
 bun install
 
 # Run tests
 bun test
 
-# Run in watch mode
-bun --watch src/cli/index.ts
-
-# Build
-bun run build
+# Lint
+bun run lint
 ```
-
-## Contributing
-
-Contributions welcome! Please read our contributing guidelines (coming soon).
 
 ## License
 
-MIT (see LICENSE file)
-
-## Roadmap
-
-- [x] Phase 0: Planning & Documentation
-- [ ] Phase 1: Core Infrastructure (Weeks 2-3)
-- [ ] Phase 2: LLM Integration (Weeks 4-5)
-- [ ] Phase 3: Agent Runtime (Weeks 6-7)
-- [ ] Phase 4: Decision Branching (Week 8)
-- [ ] Phase 5: Project Manager Persona (Week 9)
-- [ ] Phase 6: Polish & Documentation (Week 10)
-- [ ] Phase 7: Beta Testing (Week 11)
-- [ ] Phase 8: Release (Week 12)
-
-## Support
-
-- 📖 Documentation: [docs/](./docs/) (coming soon)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/dark-factory/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/dark-factory/discussions)
-
----
-
-Built with ❤️ for autonomous coding
+MIT

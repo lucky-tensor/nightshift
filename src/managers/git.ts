@@ -6,13 +6,11 @@
 
 import { execSync } from "child_process";
 import { existsSync, mkdirSync, rmSync } from "fs";
-import { join } from "path";
-import { homedir } from "os";
-
-const WORKTREE_BASE_DIR = join(homedir(), ".dark-factory", "worktrees");
+import { join, dirname } from "path";
 
 export class GitManager {
     private baseRepoPath: string;
+    private worktreeBaseDir: string;
 
     /**
      * Create a new GitManager instance
@@ -21,24 +19,14 @@ export class GitManager {
      */
     constructor(baseRepoPath: string) {
         this.baseRepoPath = baseRepoPath;
-        this.ensureBaseDir();
-    }
-
-    /**
-     * Ensure the worktree base directory exists
-     *
-     * Creates ~/.dark-factory/worktrees if it doesn't exist
-     */
-    private ensureBaseDir(): void {
-        if (!existsSync(WORKTREE_BASE_DIR)) {
-            mkdirSync(WORKTREE_BASE_DIR, { recursive: true });
-        }
+        // Worktrees are created as siblings to the base repo
+        this.worktreeBaseDir = dirname(baseRepoPath);
     }
 
     /**
      * Create a new git worktree for isolated project work
      *
-     * Creates a new branch and worktree in ~/.dark-factory/worktrees/[projectId].
+     * Creates a new branch and worktree as a sibling to the main project directory.
      * The worktree allows the AI agent to work independently without affecting
      * the main repository or other concurrent projects.
      *
@@ -51,10 +39,12 @@ export class GitManager {
      * ```typescript
      * const git = new GitManager(process.cwd());
      * const worktreePath = await git.createWorktree(projectId);
+     * // Creates worktree at ../worktree_df_task_{projectId}/
      * ```
      */
     async createWorktree(projectId: string, baseBranch: string = "master"): Promise<string> {
-        const worktreePath = join(WORKTREE_BASE_DIR, projectId);
+        const worktreeName = `worktree_df_task_${projectId}`;
+        const worktreePath = join(this.worktreeBaseDir, worktreeName);
         const branchName = `df/task/${projectId}`;
 
         if (existsSync(worktreePath)) {
@@ -91,7 +81,8 @@ export class GitManager {
      * @param projectId - UUID of the project
      */
     async removeWorktree(projectId: string): Promise<void> {
-        const worktreePath = join(WORKTREE_BASE_DIR, projectId);
+        const worktreeName = `worktree_df_task_${projectId}`;
+        const worktreePath = join(this.worktreeBaseDir, worktreeName);
         const branchName = `df/task/${projectId}`;
 
         if (!existsSync(worktreePath)) {
