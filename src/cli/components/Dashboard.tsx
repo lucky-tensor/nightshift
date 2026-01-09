@@ -174,7 +174,7 @@ const Dashboard = () => {
         return (
             <Box flexDirection="column" padding={1} alignItems="center">
                 <Gradient name="mind">
-                    <BigText text="Dark Factory" />
+                    <BigText text="Nightshift" />
                 </Gradient>
                 <Box marginBottom={1}>
                     <Text>Select a Factory to manage:</Text>
@@ -252,7 +252,7 @@ const Dashboard = () => {
         <Box flexDirection="column" padding={1}>
             <Box flexDirection="column" alignItems="center" marginBottom={1}>
                 <Gradient name="mind">
-                    <BigText text="Dark Factory" font="tiny" />
+                    <BigText text="Nightshift" font="tiny" />
                 </Gradient>
                 <Text color="gray">
                     {selectedFactory.name} • {selectedFactory.rootPath}

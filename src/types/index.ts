@@ -1,5 +1,5 @@
 // ============================================================================
-// GLOBAL CONFIGURATION (~/.config/dark-factory/config.yaml)
+// GLOBAL CONFIGURATION (~/.config/nightshift/config.yaml)
 // ============================================================================
 
 export interface GlobalConfig {
@@ -16,7 +16,7 @@ export interface KnownFactory {
 }
 
 // ============================================================================
-// FACTORY SCOPE (Stored in Factory Root/.dark-factory/factory.yaml)
+// FACTORY SCOPE (Stored in Factory Root/.nightshift/factory.yaml)
 // ============================================================================
 
 export interface FactoryConfig {

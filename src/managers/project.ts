@@ -81,11 +81,11 @@ export class ProjectManager {
     }
 
     private getProjectStoragePath(id: string): string {
-        return join(this.factory.rootPath, ".dark-factory", "projects", `${id}.yaml`);
+        return join(this.factory.rootPath, ".nightshift", "projects", `${id}.yaml`);
     }
 
     private saveProject(project: Project) {
-        const projectsDir = join(this.factory.rootPath, ".dark-factory", "projects");
+        const projectsDir = join(this.factory.rootPath, ".nightshift", "projects");
         if (!existsSync(projectsDir)) {
             mkdirSync(projectsDir, { recursive: true });
         }
@@ -93,7 +93,7 @@ export class ProjectManager {
     }
 
     listProjects(): Project[] {
-        const projectsDir = join(this.factory.rootPath, ".dark-factory", "projects");
+        const projectsDir = join(this.factory.rootPath, ".nightshift", "projects");
         if (!existsSync(projectsDir)) return [];
 
         // In a real app we'd use readdir and loop

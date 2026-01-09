@@ -1,0 +1,1 @@
+/home/lucas/nightshift/templates/commands/docs-cleanup.md

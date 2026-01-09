@@ -31,7 +31,7 @@ The system follows a strict hierarchy:
 ### 3. File System & Git
 
 - **Isolation**: Heavily relies on `git worktree` to allow multiple agents to work on the same repo without file locking issues.
-- **Storage**: YAML-based metadata storage in `~/.dark-factory/`.
+- **Storage**: YAML-based metadata storage in `~/.nightshift/`.
 
 ## Technical Constraints
 

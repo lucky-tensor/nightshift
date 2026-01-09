@@ -1,6 +1,6 @@
-# Dark Factory Feature Reference
+# Nightshift Feature Reference
 
-This document provides a comprehensive reference for the core features of the Dark Factory system.
+This document provides a comprehensive reference for the core features of the Nightshift system.
 
 ## Table of Contents
 
@@ -303,4 +303,4 @@ prototypes/
 
 ---
 
-_Dark Factory - Autonomous AI Software Factory_
+_Nightshift - Autonomous AI Software Factory_

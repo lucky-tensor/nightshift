@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-# Dark Factory Development Installation Script
+# Nightshift Development Installation Script
 #
-# This script sets up Dark Factory for local development by:
+# This script sets up Nightshift for local development by:
 # 1. Building the plugin with all dependencies bundled
 # 2. Linking the built file to OpenCode's global config
 # 3. Linking templates and commands
@@ -11,10 +11,10 @@ set -e
 # After running this, you can use `bun run dev` to watch for changes
 
 OPENCODE_CONFIG="${HOME}/.config/opencode"
-PLUGIN_DIR="${OPENCODE_CONFIG}/plugin/dark-factory"
+PLUGIN_DIR="${OPENCODE_CONFIG}/plugin/nightshift"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "🏭 Dark Factory Development Installation"
+echo "🏭 Nightshift Development Installation"
 echo "========================================"
 echo ""
 echo "Project root: ${PROJECT_ROOT}"
@@ -42,7 +42,7 @@ mkdir -p "${PLUGIN_DIR}"
 
 # Step 3: Link the main plugin file
 echo "🔗 Linking plugin file..."
-PLUGIN_LINK="${OPENCODE_CONFIG}/plugin/dark-factory.js"
+PLUGIN_LINK="${OPENCODE_CONFIG}/plugin/nightshift.js"
 
 if [ -e "${PLUGIN_LINK}" ] || [ -L "${PLUGIN_LINK}" ]; then
     rm -rf "${PLUGIN_LINK}"
@@ -89,6 +89,6 @@ echo "   2. Any changes to src/ will trigger a rebuild"
 echo "   3. OpenCode will use the linked plugin automatically"
 echo ""
 echo "🔍 Verify installation:"
-echo "   ls -la ${OPENCODE_CONFIG}/plugin/dark-factory.js"
+echo "   ls -la ${OPENCODE_CONFIG}/plugin/nightshift.js"
 echo "   ls -la ${PLUGIN_DIR}/templates"
 echo ""

@@ -1,8 +1,8 @@
-# Dark Factory Troubleshooting Guide
+# Nightshift Troubleshooting Guide
 
 ## Black Screen / OpenCode Not Loading
 
-If you see a black screen after OpenCode loads with Dark Factory installed, try these steps:
+If you see a black screen after OpenCode loads with Nightshift installed, try these steps:
 
 ### 1. Check Console Logs
 
@@ -10,25 +10,25 @@ The plugin now includes detailed logging. Check the console output:
 
 **Terminal where you launched OpenCode:**
 ```bash
-# Look for lines starting with [Dark Factory]
+# Look for lines starting with [Nightshift]
 # These will tell you where initialization failed
 ```
 
 **Expected successful output:**
 ```
-[Dark Factory] Plugin initializing...
-[Dark Factory] Directory: /path/to/your/project
-[Dark Factory] Storage directory: /path/to/your/project/.opencode/dark-factory
-[Dark Factory] Initializing managers...
-[Dark Factory] Initializing supervisor...
-[Dark Factory] Creating tools...
-[Dark Factory] Plugin initialized successfully
+[Nightshift] Plugin initializing...
+[Nightshift] Directory: /path/to/your/project
+[Nightshift] Storage directory: /path/to/your/project/.opencode/nightshift
+[Nightshift] Initializing managers...
+[Nightshift] Initializing supervisor...
+[Nightshift] Creating tools...
+[Nightshift] Plugin initialized successfully
 ```
 
 **Error output will show:**
 ```
-[Dark Factory] Plugin initialization failed: <error message>
-[Dark Factory] Stack trace: <details>
+[Nightshift] Plugin initialization failed: <error message>
+[Nightshift] Stack trace: <details>
 ```
 
 ### 2. Test Plugin in Isolation
@@ -36,7 +36,7 @@ The plugin now includes detailed logging. Check the console output:
 Run the test script to verify the plugin loads correctly:
 
 ```bash
-cd /path/to/dark-factory
+cd /path/to/nightshift
 node test-plugin-load.js
 ```
 
@@ -48,12 +48,12 @@ Check that symlinks are correctly created:
 
 ```bash
 # Plugin file
-ls -la ~/.config/opencode/plugin/dark-factory.js
-# Should show: ... -> /path/to/dark-factory/dist/index.js
+ls -la ~/.config/opencode/plugin/nightshift.js
+# Should show: ... -> /path/to/nightshift/dist/index.js
 
 # Templates
-ls -la ~/.config/opencode/plugin/dark-factory/templates
-# Should show: ... -> /path/to/dark-factory/templates
+ls -la ~/.config/opencode/plugin/nightshift/templates
+# Should show: ... -> /path/to/nightshift/templates
 
 # Commands
 ls -la ~/.config/opencode/command/factory.md
@@ -61,7 +61,7 @@ ls -la ~/.config/opencode/command/factory.md
 
 ### 4. Check Git Repository
 
-Dark Factory requires your project to be a git repository. If not initialized:
+Nightshift requires your project to be a git repository. If not initialized:
 
 ```bash
 cd /path/to/your/project
@@ -76,7 +76,7 @@ To verify the plugin is causing the issue:
 
 ```bash
 # Remove the symlink
-rm ~/.config/opencode/plugin/dark-factory.js
+rm ~/.config/opencode/plugin/nightshift.js
 
 # Restart OpenCode
 # If it loads normally, the plugin is the issue
@@ -92,7 +92,7 @@ ls -la ~/.config/opencode/plugin/
 
 # Fix if needed
 chmod 755 ~/.config/opencode/plugin/
-chmod 644 ~/.config/opencode/plugin/dark-factory.js
+chmod 644 ~/.config/opencode/plugin/nightshift.js
 ```
 
 ### 7. Rebuild Plugin
@@ -100,7 +100,7 @@ chmod 644 ~/.config/opencode/plugin/dark-factory.js
 Sometimes a stale build can cause issues:
 
 ```bash
-cd /path/to/dark-factory
+cd /path/to/nightshift
 
 # Clean and rebuild
 rm -rf dist/
@@ -119,7 +119,7 @@ Other plugins might conflict. Try disabling other plugins temporarily:
 mv ~/.config/opencode/plugin ~/.config/opencode/plugin.backup
 mkdir ~/.config/opencode/plugin
 
-# Install only Dark Factory
+# Install only Nightshift
 bun run dev:install
 
 # Test OpenCode
@@ -131,11 +131,11 @@ bun run dev:install
 ### "Storage not initialized"
 
 **Cause:** Storage initialization failed
-**Solution:** Ensure `.opencode/dark-factory` directory can be created in your project
+**Solution:** Ensure `.opencode/nightshift` directory can be created in your project
 
 ```bash
-mkdir -p .opencode/dark-factory
-chmod 755 .opencode/dark-factory
+mkdir -p .opencode/nightshift
+chmod 755 .opencode/nightshift
 ```
 
 ### "Worktree already exists"
@@ -154,11 +154,11 @@ git worktree remove /path/to/stale/worktree
 ### "Failed to create session"
 
 **Cause:** OpenCode client API issue
-**Solution:** This is an OpenCode issue, not Dark Factory. Check OpenCode is running correctly.
+**Solution:** This is an OpenCode issue, not Nightshift. Check OpenCode is running correctly.
 
 ## Plugin Not Showing Tools
 
-If OpenCode loads but Dark Factory tools aren't available:
+If OpenCode loads but Nightshift tools aren't available:
 
 ### 1. Verify Plugin Registration
 
@@ -216,7 +216,7 @@ If none of these steps work:
 
 ## Development Mode Debugging
 
-If you're developing Dark Factory:
+If you're developing Nightshift:
 
 ### Watch Mode Logs
 
@@ -258,7 +258,7 @@ grep -c "node_modules" dist/index.js
 
 ## Performance Issues
 
-If Dark Factory loads but runs slowly:
+If Nightshift loads but runs slowly:
 
 ### Disable Supervisor
 
@@ -274,16 +274,16 @@ YAML storage operations are synchronous. Large state files can slow things down:
 
 ```bash
 # Check storage file sizes
-du -sh .opencode/dark-factory/*.yaml
+du -sh .opencode/nightshift/*.yaml
 ```
 
 ## Still Stuck?
 
-Check the Dark Factory logs in your project:
+Check the Nightshift logs in your project:
 
 ```bash
 # If any error logs were written
-cat .opencode/dark-factory/error.log
+cat .opencode/nightshift/error.log
 ```
 
 Or check OpenCode's logs (if available).

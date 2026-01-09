@@ -1,6 +1,6 @@
 # Research Synthesis: The Cognitive Factory
 
-This document explores the deeper technical implications and future directions of the Dark Factory's core hypotheses.
+This document explores the deeper technical implications and future directions of the Nightshift's core hypotheses.
 
 ## 1. Git-Brain: From Versioning State to Versioning Reasoning
 
@@ -17,7 +17,7 @@ The "Strawman" argument correctly identifies that **Model Drift** threatens the 
 
 To solve the **History Bloat** problem, we should explore using `git notes`.
 
-- **Strategy**: Keep the commit message human-readable. Store the heavy JSON metadata (prompts, chain-of-thought, trace IDs) in `refs/notes/dark-factory`.
+- **Strategy**: Keep the commit message human-readable. Store the heavy JSON metadata (prompts, chain-of-thought, trace IDs) in `refs/notes/nightshift`.
 - **Benefit**: Metadata is decoupled from the main history but remains bound to the commit hash. It can be pushed/pulled separately.
 
 ## 2. Multi-Agent Systems: Beyond the Committee

@@ -12,13 +12,13 @@ import Dashboard from "./cli/components/Dashboard";
 const cli = meow(
     `
 	Usage
-	  $ dark-factory
+	  $ nightshift
 
 	Options
 	  --name  Your name
 
 	Examples
-	  $ dark-factory --name=Jane
+	  $ nightshift --name=Jane
 	  Hello, Jane
 `,
     {
@@ -39,8 +39,8 @@ const App = () => {
         try {
             // Initialize Storage
             const cwd = process.cwd();
-            // Use same path as plugin: .opencode/dark-factory
-            const storageDir = join(cwd, ".opencode", "dark-factory");
+            // Use same path as plugin: .opencode/nightshift
+            const storageDir = join(cwd, ".opencode", "nightshift");
             getStorage(storageDir);
 
             // Managers will be instantiated in the Dashboard or passed down
@@ -56,7 +56,7 @@ const App = () => {
     }
 
     if (!initialized) {
-        return <Text>Initializing Dark Factory...</Text>;
+        return <Text>Initializing Nightshift...</Text>;
     }
 
     return <Dashboard />;

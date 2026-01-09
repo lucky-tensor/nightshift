@@ -1,10 +1,10 @@
 # Agent Configuration Instructions
 
-This document guides you (or your agent) on how to install the Dark Factory methodology into your specific AI coding environment.
+This document guides you (or your agent) on how to install the Nightshift methodology into your specific AI coding environment.
 
 ## 1. Source Templates
 
-All standard Dark Factory templates are located in the `templates/` directory of this repository:
+All standard Nightshift templates are located in the `templates/` directory of this repository:
 
 - **`templates/agents/`**: Persona definitions (Engineer, Planner, Curator).
 - **`templates/nags/`**: Quality assurance checklists (The "Gateway of Last Resort").
@@ -44,7 +44,7 @@ If your tool does not have a strict "project config" directory structure:
     cp -r templates/* .agent/
     ```
 - **Usage**: At the start of a session, prompt your agent:
-    > "I am using the Dark Factory methodology. Please read the context in `.agent/` and `START_HERE.md` before we begin."
+    > "I am using the Nightshift methodology. Please read the context in `.agent/` and `START_HERE.md` before we begin."
 
 ## 3. Verification
 

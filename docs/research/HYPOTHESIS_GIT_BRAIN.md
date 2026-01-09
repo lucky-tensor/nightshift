@@ -63,13 +63,13 @@ Enhance git workflow to capture the "why" behind every change:
 
 ```bash
 # View enhanced commit history
-dark-factory commits --enhanced
+nightshift commits --enhanced
 
 # Replay session from specific commit
-dark-factory replay --from <commit-hash>
+nightshift replay --from <commit-hash>
 
 # Search commits by expected outcome
-dark-factory search --outcome "authentication system"
+nightshift search --outcome "authentication system"
 ```
 
 ## Risk Mitigation
@@ -125,7 +125,7 @@ This will lead to massive **history bloat**. Commit messages are meant to be hum
 
 ### Synthesis & Debate
 
-The core conflict lies in the **location of truth**. Is the "why" part of the repository or part of the tooling? If we believe that code is the product of reasoning, then the reasoning belongs with the code. The bloat issue can be solved with better CLI tooling that hides metadata by default (`dark-factory log` vs `git log`). Regarding model drift, while exact diffs might change, the _intent_ remains valid and provides a superior starting point for any future agent than just the "dead" code. The debate then shifts to: _How much storage are we willing to trade for perfect traceability?_
+The core conflict lies in the **location of truth**. Is the "why" part of the repository or part of the tooling? If we believe that code is the product of reasoning, then the reasoning belongs with the code. The bloat issue can be solved with better CLI tooling that hides metadata by default (`nightshift log` vs `git log`). Regarding model drift, while exact diffs might change, the _intent_ remains valid and provides a superior starting point for any future agent than just the "dead" code. The debate then shifts to: _How much storage are we willing to trade for perfect traceability?_
 
 ## Future Opportunities
 

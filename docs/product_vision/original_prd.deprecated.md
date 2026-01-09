@@ -1,8 +1,8 @@
-# Product Requirements Document: Dark Factory
+# Product Requirements Document: Nightshift
 
 ## Executive Summary
 
-Dark Factory is a TypeScript-based orchestration tool for Antigravity IDE that enables autonomous, long-running AI agents to complete large software projects without human intervention. The system manages multiple concurrent agent workflows, handles resource constraints, and ensures code quality through automated branching, testing, and decision-making processes.
+Nightshift is a TypeScript-based orchestration tool for Antigravity IDE that enables autonomous, long-running AI agents to complete large software projects without human intervention. The system manages multiple concurrent agent workflows, handles resource constraints, and ensures code quality through automated branching, testing, and decision-making processes.
 
 ## Problem Statement
 
@@ -55,21 +55,21 @@ Current AI coding assistants require constant human supervision and cannot:
 **US-1: Start Autonomous Project**
 ```
 As a developer
-I want to start a Dark Factory project with a high-level task description
+I want to start a Nightshift project with a high-level task description
 So that an agent can work autonomously toward completion
 ```
 
 **US-2: Automatic Cost Management**
 ```
 As a developer with limited API credits
-I want Dark Factory to automatically switch between LLM providers
+I want Nightshift to automatically switch between LLM providers
 So that work continues without manual intervention when credits run low
 ```
 
 **US-3: Decision Point Exploration**
 ```
 As a developer facing architectural uncertainty
-I want Dark Factory to automatically explore multiple approaches in parallel
+I want Nightshift to automatically explore multiple approaches in parallel
 So that I can compare working implementations of each option
 ```
 
@@ -90,14 +90,14 @@ So that I can monitor progress without interrupting the agent
 **US-6: Automatic Recovery**
 ```
 As a developer
-I want Dark Factory to handle API outages gracefully
+I want Nightshift to handle API outages gracefully
 So that work resumes automatically when services recover
 ```
 
 ## Functional Requirements
 
 ### FR-1: Project Initialization
-- **FR-1.1**: Create new Dark Factory project from task description
+- **FR-1.1**: Create new Nightshift project from task description
 - **FR-1.2**: Select one or more persona templates (engineer, tester, etc.)
 - **FR-1.3**: Initialize git worktree with semantic branch name
 - **FR-1.4**: Generate initial task list from project description

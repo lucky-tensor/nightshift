@@ -1,4 +1,4 @@
-# Technical Specification: Dark Factory
+# Technical Specification: Nightshift
 
 ## 1. System Architecture
 
@@ -6,7 +6,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Dark Factory CLI (TUI)                  │
+│                     Nightshift CLI (TUI)                  │
 │                   (Ink + React + Node.js)                   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -111,7 +111,7 @@ interface Project {
 
     // Git information
     baseBranch: string; // e.g., "main"
-    workBranch: string; // e.g., "df/feature-auth/2025-12-26"
+    workBranch: string; // e.g., "ns/feature-auth/2025-12-26"
     worktreePath: string; // Absolute path to worktree
 
     // Personas
@@ -647,13 +647,13 @@ interface QualityReport {
 
 ### 4.1 CLI Interaction (TUI)
 
-The Dark Factory CLI is now a Terminal User Interface.
+The Nightshift CLI is now a Terminal User Interface.
 
 ```bash
 # Start the TUI
 bun run start
 # OR
-dark-factory
+nightshift
 ```
 
 **Keybindings:**
@@ -669,7 +669,7 @@ dark-factory
 
 ### 4.2 Configuration
 
-**Location**: `.opencode/dark-factory/config.yaml` (Project local) or `~/.dark-factory/config.yaml` (Global)
+**Location**: `.opencode/nightshift/config.yaml` (Project local) or `~/.nightshift/config.yaml` (Global)
 
 ### 4.2 Persona Template Format
 
@@ -915,7 +915,7 @@ interface ConversationExport {
 
 ### 4.4 Antigravity CLI Adapter
 
-The Antigravity CLI adapter is the **primary LLM provider** for Dark Factory. It interfaces with Antigravity IDE via its command-line interface.
+The Antigravity CLI adapter is the **primary LLM provider** for Nightshift. It interfaces with Antigravity IDE via its command-line interface.
 
 #### 4.4.1 Adapter Implementation
 
@@ -1043,7 +1043,7 @@ interface CommandResult {
 
 #### 4.4.2 OpenCode SDK Integration
 
-Dark Factory uses the OpenCode SDK with the `opencode-google-antigravity-auth` plugin to access LLMs through Antigravity's OAuth and quota system.
+Nightshift uses the OpenCode SDK with the `opencode-google-antigravity-auth` plugin to access LLMs through Antigravity's OAuth and quota system.
 
 **Key Benefits:**
 
@@ -1081,7 +1081,7 @@ export class OpenCodeAdapter implements LLMProvider {
     ): Promise<LLMResponse> {
         if (!this.currentSession) {
             this.currentSession = await this.client.session.create({
-                body: { title: `Dark Factory Session ${Date.now()}` },
+                body: { title: `Nightshift Session ${Date.now()}` },
             });
         }
 
@@ -1152,7 +1152,7 @@ Via Antigravity OAuth (using `opencode-google-antigravity-auth`):
 #### 4.4.5 Configuration
 
 ```yaml
-# ~/.dark-factory/config.yaml
+# ~/.nightshift/config.yaml
 llm:
     adapter: opencode
     default_model: gemini-3-pro-high
@@ -1352,21 +1352,21 @@ async function retryWithBackoff<T>(
 ### 10.1 Installation
 
 ```bash
-bun install -g @dark-factory/cli
+bun install -g @nightshift/cli
 
 # Initialize config
-df setup
+nightshift setup
 
 # Configure first provider
-df provider add --name openai --model gpt-4 --api-key $KEY
+nightshift provider add --name openai --model gpt-4 --api-key $KEY
 ```
 
 ### 10.2 Configuration Files
 
-**~/.dark-factory/config.yaml**
+**~/.nightshift/config.yaml**
 
 ```yaml
-dataDir: ~/.dark-factory/data
+dataDir: ~/.nightshift/data
 defaultMaxRuntime: 12h
 defaultPersonas:
     - engineer
@@ -1375,7 +1375,7 @@ auditInterval: 30m
 logLevel: info
 ```
 
-**~/.dark-factory/providers.yaml**
+**~/.nightshift/providers.yaml**
 
 ```yaml
 providers:

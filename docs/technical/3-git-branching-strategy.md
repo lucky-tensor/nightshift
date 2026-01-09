@@ -2,7 +2,7 @@
 
 ## 1. Philosophy: Branches as Access Paths
 
-In the Dark Factory, a branch name is not just a label; it is an **address** that defines the lineage of a work session.
+In the Nightshift, a branch name is not just a label; it is an **address** that defines the lineage of a work session.
 
 Because agents fork efficiently to explore solution paths (decision branching), the branch structure resembles a tree of possibilities rather than a flat list of features. We use **Access Path Naming** to encode this ancestry directly into the branch name.
 
@@ -16,8 +16,8 @@ All automated work begins from a shared root, typically `main` or a `develop` br
 
 When a top-level session starts (e.g., implementing a feature), it creates a root for that session.
 
-- **Format**: `df/session-{id}`
-- **Example**: `df/session-auth-v1`
+- **Format**: `ns/session-{id}`
+- **Example**: `ns/session-auth-v1`
 
 ### 2.3 Recursive Forking (Access Paths)
 
@@ -25,13 +25,13 @@ When an agent decides to fork a session to explore a decision (e.g., "Option A: 
 
 - **Format**: `{parent-branch}/{child-id}`
 - **Example**:
-    - Parent: `df/session-auth-v1`
-    - Child A: `df/session-auth-v1/opt-auth0`
-    - Child B: `df/session-auth-v1/opt-custom`
+    - Parent: `ns/session-auth-v1`
+    - Child A: `ns/session-auth-v1/opt-auth0`
+    - Child B: `ns/session-auth-v1/opt-custom`
 
 If Child A forks again:
 
-- Grandchild: `df/session-auth-v1/opt-auth0/fix-callback`
+- Grandchild: `ns/session-auth-v1/opt-auth0/fix-callback`
 
 This structure allows any agent to look at a branch name and instantly know:
 
@@ -41,7 +41,7 @@ This structure allows any agent to look at a branch name and instantly know:
 
 ## 3. Worktree 1:1 Mapping
 
-Every "Dark Factory" branch is checked out into its own unique **Git Worktree**. This is critical for concurrency.
+Every "Nightshift" branch is checked out into its own unique **Git Worktree**. This is critical for concurrency.
 
 - **Rule**: `1 Branch = 1 Worktree`
 - **Path**: `/output/{product}/worktree-{leaf-name}`
@@ -49,7 +49,7 @@ Every "Dark Factory" branch is checked out into its own unique **Git Worktree**.
 
 ## 4. The Pruning Protocol (Depth Limit)
 
-Recursion has limits. Deeply nested branch names (e.g., `df/session-A/opt-B/fix-C/try-D/revert-E`) become unwieldy and indicate a "fractal" loss of focus.
+Recursion has limits. Deeply nested branch names (e.g., `ns/session-A/opt-B/fix-C/try-D/revert-E`) become unwieldy and indicate a "fractal" loss of focus.
 
 ### 4.1 The Threshold
 
@@ -59,18 +59,18 @@ When a branch depth exceeds **7 levels** (Root -> ... -> **Limit**), the system 
 
 1.  **Consolidate**: The agent effectively says, "This specific path is now the new main effort."
 2.  **Rename**: The deep branch is renamed (or branched off) to a new top-level feature name.
-    - _Old_: `df/session-auth-v1/opt-custom/refactor-db/fix-schema`
-    - _New_: `df/feat-auth-schema-fix`
+    - _Old_: `ns/session-auth-v1/opt-custom/refactor-db/fix-schema`
+    - _New_: `ns/feat-auth-schema-fix`
 3.  **Archive**: The old lineage is preserved in git history, but active work continues on the new, shortened "Access Path."
 
 ## 5. Summary Table
 
 | Type              | Pattern                      | Example                             |
 | :---------------- | :--------------------------- | :---------------------------------- |
-| **Root Session**  | `df/session-{id}`            | `df/session-login-flow`             |
-| **Decision Fork** | `{parent}/{option}`          | `df/session-login-flow/opt-oauth`   |
-| **Deep Nesting**  | `{parent}/{opt}/{sub}/{sub}` | `df/.../opt-oauth/fix-ui/style-btn` |
-| **Pruned**        | `df/feat-{name}`             | `df/feat-oauth-ui`                  |
+| **Root Session**  | `ns/session-{id}`            | `ns/session-login-flow`             |
+| **Decision Fork** | `{parent}/{option}`          | `ns/session-login-flow/opt-oauth`   |
+| **Deep Nesting**  | `{parent}/{opt}/{sub}/{sub}` | `ns/.../opt-oauth/fix-ui/style-btn` |
+| **Pruned**        | `ns/feat-{name}`             | `ns/feat-oauth-ui`                  |
 
 ## 6. Implementation Notes
 

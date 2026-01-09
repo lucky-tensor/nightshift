@@ -1,8 +1,8 @@
-# Implementation Plan: Dark Factory
+# Implementation Plan: Nightshift
 
 ## Overview
 
-This implementation plan breaks down the Dark Factory project into phases, with each phase delivering incremental value. The plan prioritizes core functionality first, then adds sophistication in later phases.
+This implementation plan breaks down the Nightshift project into phases, with each phase delivering incremental value. The plan prioritizes core functionality first, then adds sophistication in later phases.
 
 **Estimated Timeline**: 8-12 weeks for MVP (Phases 1-3)
 
@@ -30,7 +30,7 @@ This implementation plan breaks down the Dark Factory project into phases, with 
 
 #### 0.2 Project Structure
 ```
-dark-factory/
+nightshift/
 ├── src/
 │   ├── cli/              # CLI commands
 │   ├── core/             # Core orchestration engine
@@ -154,9 +154,9 @@ dark-factory/
 
 #### 1.4 CLI Foundation
 - [ ] Set up Commander.js
-- [ ] Implement `df init` command
-- [ ] Implement `df list` command
-- [ ] Implement `df status` command
+- [ ] Implement `nightshift init` command
+- [ ] Implement `nightshift list` command
+- [ ] Implement `nightshift status` command
 - [ ] Add colorful output (chalk)
 - [ ] Add progress indicators (ora)
 
@@ -267,10 +267,10 @@ dark-factory/
 - `tests/integration/rate-limiting.test.ts`
 
 #### 2.5 CLI Provider Commands
-- [ ] Implement `df auth` command (Antigravity OAuth)
-- [ ] Implement `df models` command (list available)
-- [ ] Implement `df costs` command
-- [ ] Implement `df config model` command
+- [ ] Implement `nightshift auth` command (Antigravity OAuth)
+- [ ] Implement `nightshift models` command (list available)
+- [ ] Implement `nightshift costs` command
+- [ ] Implement `nightshift config model` command
 
 **Acceptance Criteria**:
 - Can authenticate with Antigravity
@@ -402,9 +402,9 @@ dark-factory/
 - `tests/integration/orchestration.test.ts`
 
 #### 3.7 CLI Execution Commands
-- [ ] Implement `df start` command
-- [ ] Implement `df pause` command
-- [ ] Implement `df resume` command
+- [ ] Implement `nightshift start` command
+- [ ] Implement `nightshift pause` command
+- [ ] Implement `nightshift resume` command
 - [ ] Add real-time status display
 
 **Acceptance Criteria**:
@@ -510,8 +510,8 @@ dark-factory/
 - `tests/unit/core/branch-comparator.test.ts`
 
 #### 4.5 CLI Branch Commands
-- [ ] Implement `df branches` command
-- [ ] Implement `df compare` command
+- [ ] Implement `nightshift branches` command
+- [ ] Implement `nightshift compare` command
 - [ ] Add visualization of branch tree
 
 **Acceptance Criteria**:
@@ -594,7 +594,7 @@ dark-factory/
 - `tests/integration/pm-integration.test.ts`
 
 #### 5.4 Task List CLI Enhancements
-- [ ] Implement `df tasks` command with filters
+- [ ] Implement `nightshift tasks` command with filters
 - [ ] Show task dependencies
 - [ ] Show audit history
 - [ ] Add task visualization
@@ -699,9 +699,9 @@ dark-factory/
 - `examples/refactoring/`
 
 #### 6.5 CLI Improvements
-- [ ] Add `df export` command
-- [ ] Add `df logs` command
-- [ ] Add `df health` command
+- [ ] Add `nightshift export` command
+- [ ] Add `nightshift logs` command
+- [ ] Add `nightshift health` command
 - [ ] Improve help text
 - [ ] Add command aliases
 
@@ -945,7 +945,7 @@ bun run format                # Format code
 
 # Local testing
 bun link                      # Link for local testing
-df --version         # Verify installation
+nightshift --version         # Verify installation
 ```
 
 ### Key Files

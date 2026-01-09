@@ -179,7 +179,7 @@ interface AgentCollaboration {
 
 ### Phase 3: Integration Testing (2 weeks)
 
-- Integrate with existing Dark Factory systems
+- Integrate with existing Nightshift systems
 - Test on real projects
 - Measure performance improvements
 

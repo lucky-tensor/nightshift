@@ -1,8 +1,8 @@
 /**
- * Dark Factory Core Managers - Unified API
+ * Nightshift Core Managers - Unified API
  *
  * This module exports all manager classes and provides a unified
- * interface for the Dark Factory system.
+ * interface for the Nightshift system.
  */
 
 // Git-Brain System

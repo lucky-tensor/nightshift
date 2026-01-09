@@ -66,19 +66,19 @@
 
 ### CLI Commands
 
-- ✅ **Factory commands** (`df factory`)
+- ✅ **Factory commands** (`nightshift factory`)
     - `init <name> <description>` - Initialize factory
     - `status` - Show factory status and budget
     - `pause` - Pause operations
     - `resume` - Resume operations
 
-- ✅ **Product commands** (`df product`)
+- ✅ **Product commands** (`nightshift product`)
     - `create <name> <description>` - Create product with git repo
     - `list` - List all products
     - `status <id>` - Show detailed product status
     - `plan <id>` - Show implementation plan
 
-- ✅ **Knowledge base commands** (`df docs`)
+- ✅ **Knowledge base commands** (`nightshift docs`)
     - `list <productId>` - List knowledge base entries
     - `stats <productId>` - Show knowledge base statistics
 
@@ -97,7 +97,7 @@
     - `generateProductPlan()` - Generate implementation plan with AI
     - Auto-commit generated documents to git
 
-- ✅ **CLI Command for AI Generation** (`df product generate`)
+- ✅ **CLI Command for AI Generation** (`nightshift product generate`)
     - `generate <id>` - Generate both PRD and Plan
     - `generate <id> --prd-only` - Generate only PRD
     - `generate <id> --plan-only` - Generate only Plan
@@ -126,16 +126,16 @@ class AgentCoordinator {
 
 ```bash
 # Product workflow
-df product work <id>               # Execute next ready project automatically
+nightshift product work <id>               # Execute next ready project automatically
 
 # Project execution (extends existing)
-df project create <product-id> <name>  # Create from plan
-df project work <project-id>           # Execute tasks with agents
-df project merge <project-id>          # Merge to main + docs
+nightshift project create <product-id> <name>  # Create from plan
+nightshift project work <project-id>           # Execute tasks with agents
+nightshift project merge <project-id>          # Merge to main + docs
 
 # Knowledge base
-df docs merge <product-id> <project-id>  # Manual merge trigger
-df docs index <product-id>               # Generate INDEX.md
+nightshift docs merge <product-id> <project-id>  # Manual merge trigger
+nightshift docs index <product-id>               # Generate INDEX.md
 ```
 
 ### Phase 7: Templates & Documentation
@@ -220,9 +220,9 @@ df docs index <product-id>               # Generate INDEX.md
     - Supervisor coordination (PM, Git, Finance)
 
 2. **Advanced CLI Commands** (1-2 hours)
-    - `df product work <id>` - Execute next ready project automatically
-    - `df project create/work/merge` - Enhanced project commands
-    - `df docs merge/index` - Manual knowledge base management
+    - `nightshift product work <id>` - Execute next ready project automatically
+    - `nightshift project create/work/merge` - Enhanced project commands
+    - `nightshift docs merge/index` - Manual knowledge base management
 
 3. **End-to-End Testing** (2-3 hours)
     - Manual testing of complete workflow

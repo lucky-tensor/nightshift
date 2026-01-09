@@ -1,5 +1,5 @@
 /**
- * Dark Factory Comprehensive Demo
+ * Nightshift Comprehensive Demo
  *
  * Demonstrates all features working together:
  * 1. Git-Brain commit with metadata
@@ -16,7 +16,7 @@ import { CodeIndexManager } from "../src/managers/code-index";
 import { MultiAgentManager } from "../src/managers/multi-agent";
 import { AgentContext } from "../src/types";
 
-const DEMO_DIR = "/tmp/dark-factory-demo";
+const DEMO_DIR = "/tmp/nightshift-demo";
 
 interface DemoStep {
     name: string;
@@ -25,7 +25,7 @@ interface DemoStep {
 
 async function main() {
     console.log("=".repeat(70));
-    console.log("     DARK FACTORY COMPREHENSIVE DEMO");
+    console.log("     NIGHTSHIFT COMPREHENSIVE DEMO");
     console.log("     Integrating Git-Brain, Code Index, Multi-Agent, and Blackboard");
     console.log("=".repeat(70));
 
@@ -37,10 +37,10 @@ async function main() {
 
     // Initialize git repo
     execSync("git init", { cwd: DEMO_DIR, stdio: "pipe" });
-    execSync('git config user.email "demo@dark-factory"', { cwd: DEMO_DIR, stdio: "pipe" });
-    execSync('git config user.name "Dark Factory Demo"', { cwd: DEMO_DIR, stdio: "pipe" });
+    execSync('git config user.email "demo@nightshift"', { cwd: DEMO_DIR, stdio: "pipe" });
+    execSync('git config user.name "Nightshift Demo"', { cwd: DEMO_DIR, stdio: "pipe" });
 
-    fs.writeFileSync(path.join(DEMO_DIR, "README.md"), "# Dark Factory Demo Project\n");
+    fs.writeFileSync(path.join(DEMO_DIR, "README.md"), "# Nightshift Demo Project\n");
     execSync("git add .", { cwd: DEMO_DIR, stdio: "pipe" });
     execSync('git commit -m "Initial commit" --no-verify', { cwd: DEMO_DIR, stdio: "pipe" });
 

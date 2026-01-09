@@ -13,7 +13,7 @@ These features are available simply by adopting the file structure and templates
 
 ### Mode 2: Service (Active)
 
-These features require running the Dark Factory orchestration engine.
+These features require running the Nightshift orchestration engine.
 
 ## Core Capabilities (Service Mode)
 

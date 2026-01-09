@@ -53,7 +53,7 @@ export class AgentRuntime {
 
             // Create Server Session
             const sessionRes = await this.client.session.create({
-                body: { title: `Dark Factory: ${project.name} - ${sessionId}` },
+                body: { title: `Nightshift: ${project.name} - ${sessionId}` },
             });
             this.serverSessionId = sessionRes.data.id;
 

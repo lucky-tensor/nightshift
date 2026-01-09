@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the core source code for the Dark Factory CLI application.
+This directory contains the core source code for the Nightshift CLI application.
 
 ## Directory Structure
 

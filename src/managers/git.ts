@@ -46,7 +46,7 @@ export class GitManager {
     async createWorktree(projectId: string, baseBranch: string = "master"): Promise<string> {
         const worktreeName = `worktree_df_task_${projectId}`;
         const worktreePath = join(this.worktreeBaseDir, worktreeName);
-        const branchName = `df/task/${projectId}`;
+        const branchName = `ns/task/${projectId}`;
 
         if (existsSync(worktreePath)) {
             throw new Error(`Worktree already exists at ${worktreePath}`);
@@ -84,7 +84,7 @@ export class GitManager {
     async removeWorktree(projectId: string): Promise<void> {
         const worktreeName = `worktree_df_task_${projectId}`;
         const worktreePath = join(this.worktreeBaseDir, worktreeName);
-        const branchName = `df/task/${projectId}`;
+        const branchName = `ns/task/${projectId}`;
 
         if (!existsSync(worktreePath)) {
             return;
@@ -195,8 +195,8 @@ export class GitManager {
                 .toString()
                 .trim();
 
-            // Look for Dark Factory metadata section
-            const metadataStart = commitMessage.indexOf("<!-- DARK_FACTORY_METADATA");
+            // Look for Nightshift metadata section
+            const metadataStart = commitMessage.indexOf("<!-- NIGHTSHIFT_METADATA");
             const metadataEnd = commitMessage.indexOf("-->", metadataStart);
 
             if (metadataStart === -1 || metadataEnd === -1) {
@@ -204,7 +204,7 @@ export class GitManager {
             }
 
             const metadataJson = commitMessage
-                .substring(metadataStart + "<!-- DARK_FACTORY_METADATA\n".length, metadataEnd)
+                .substring(metadataStart + "<!-- NIGHTSHIFT_METADATA\n".length, metadataEnd)
                 .trim();
 
             const metadata = JSON.parse(metadataJson);

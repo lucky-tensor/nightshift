@@ -1,5 +1,5 @@
 ---
-description: Initialize or check Dark Factory status
+description: Initialize or check Nightshift status
 ---
 
 If the user wants to initialize the factory, call `factory_init` with the provided arguments.

@@ -6,9 +6,9 @@ import { join } from "path";
 import { homedir } from "os";
 
 // Local storage path (metadata in CWD)
-const METADATA_DIR = join(process.cwd(), ".dark-factory");
+const METADATA_DIR = join(process.cwd(), ".nightshift");
 // Global config path
-const GLOBAL_CONFIG_DIR = join(homedir(), ".config", "dark-factory");
+const GLOBAL_CONFIG_DIR = join(homedir(), ".config", "nightshift");
 
 interface SettingsProps {
     onBack: () => void;
@@ -43,7 +43,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onResetComplete }) => {
                         rmSync(GLOBAL_CONFIG_DIR, { recursive: true, force: true });
                     } else {
                         // Force verify path
-                        const absPath = join(homedir(), ".config", "dark-factory");
+                        const absPath = join(homedir(), ".config", "nightshift");
                         if (existsSync(absPath)) {
                             rmSync(absPath, { recursive: true, force: true });
                         }

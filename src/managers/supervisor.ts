@@ -4,7 +4,7 @@
  * "The Factory Never Stops"
  *
  * This background service monitors the state of the factory, active projects,
- * and running tasks. It acts as the heartbeat of the Dark Factory.
+ * and running tasks. It acts as the heartbeat of the Nightshift.
  */
 
 import { ProjectManager } from "./project";
@@ -114,7 +114,7 @@ export class FactorySupervisor {
             const statusIcon =
                 factory.status === "active" ? "🟢" : factory.status === "paused" ? "⏸️" : "🔴";
 
-            let md = `# ${statusIcon} Dark Factory Status\n\n`;
+            let md = `# ${statusIcon} Nightshift Status\n\n`;
             md += `**Last Updated:** ${lastUpdated}\n\n`;
 
             md += `## 📊 Overview\n`;

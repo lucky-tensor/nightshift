@@ -32,5 +32,5 @@ Nags are stored as markdown templates in `templates/nags/`. Users can define cus
 
 ## Integration
 
-- **CLI**: Users can manually "nag" an agent: `df nag <agent-id> --template javascript`.
+- **CLI**: Users can manually "nag" an agent: `nightshift nag <agent-id> --template javascript`.
 - **Automated**: The `Supervisor` agent automatically applies nags based on the file types modified (e.g., if `.ts` files changed, apply `javascript-nag`).

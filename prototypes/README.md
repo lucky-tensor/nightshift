@@ -1,6 +1,6 @@
-# Dark Factory Prototypes
+# Nightshift Prototypes
 
-This directory contains standalone, runnable prototypes for the core features of the Dark Factory system.
+This directory contains standalone, runnable prototypes for the core features of the Nightshift system.
 
 ## 📂 Prototype Structure
 

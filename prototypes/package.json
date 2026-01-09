@@ -1,7 +1,7 @@
 {
-    "name": "dark-factory-prototypes",
+    "name": "nightshift-prototypes",
     "version": "0.1.0",
-    "description": "Standalone prototypes for Dark Factory features",
+    "description": "Standalone prototypes for Nightshift features",
     "main": "index.js",
     "scripts": {
         "diff-brain": "cd diff-brain && npx ts-node index.ts",

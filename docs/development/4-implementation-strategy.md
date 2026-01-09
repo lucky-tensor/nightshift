@@ -21,7 +21,7 @@ We have established the basic types (`Factory`, `Product`, `Plan`) and storage m
 ### Phase 4: CLI & Workflow
 
 - Wire up the TUI commands to the backend Managers.
-- Implement `df product plan` and `df product work`.
+- Implement `nightshift product plan` and `nightshift product work`.
 
 ### Phase 5: Hardening
 

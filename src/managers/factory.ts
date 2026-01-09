@@ -34,7 +34,7 @@ export class FactoryManager {
      */
     getStorageDir(): string | null {
         if (!this.currentFactory) return null;
-        return join(this.currentFactory.rootPath, ".dark-factory");
+        return join(this.currentFactory.rootPath, ".nightshift");
     }
 
     /**
@@ -80,7 +80,7 @@ export class FactoryManager {
      *
      * Structure:
      * /path/to/root/
-     *   .dark-factory/
+     *   .nightshift/
      *     factory.yaml
      *   {factory-name}-main/  (Main Git Repo)
      *     .git/
@@ -93,7 +93,7 @@ export class FactoryManager {
 
         const mainRepoName = `${name}-main`;
         const mainRepoPath = join(rootPath, mainRepoName);
-        const metadataDir = join(rootPath, ".dark-factory");
+        const metadataDir = join(rootPath, ".nightshift");
 
         // 1. Create Directory Structure
         if (!existsSync(mainRepoPath)) {
@@ -136,7 +136,7 @@ export class FactoryManager {
      * Load a Factory from a given root path
      */
     loadFactory(rootPath: string): FactoryConfig | null {
-        const configPath = join(rootPath, ".dark-factory", "factory.yaml");
+        const configPath = join(rootPath, ".nightshift", "factory.yaml");
         if (!existsSync(configPath)) return null;
 
         try {

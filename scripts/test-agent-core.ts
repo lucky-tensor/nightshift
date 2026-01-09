@@ -31,8 +31,8 @@ const project: Project = {
     tokensUsed: 0,
 };
 
-// Ensure .dark-factory directory exists for SessionManager
-const sessionDir = join(process.cwd(), ".dark-factory", "sessions");
+// Ensure .nightshift directory exists for SessionManager
+const sessionDir = join(process.cwd(), ".nightshift", "sessions");
 if (!existsSync(sessionDir)) {
     mkdirSync(sessionDir, { recursive: true });
 }

@@ -1,5 +1,5 @@
 {
-    "name": "dark-factory",
+    "name": "nightshift",
     "version": "0.1.0",
     "description": "Autonomous AI Agent Orchestration Plugin for OpenCode",
     "type": "module",
@@ -9,7 +9,7 @@
     },
     "private": true,
     "bin": {
-        "dark-factory": "./dist/cli.js"
+        "nightshift": "./dist/cli.js"
     },
     "scripts": {
         "build": "bun build ./src/plugin/index.ts --outdir ./dist --target node --packages bundle",

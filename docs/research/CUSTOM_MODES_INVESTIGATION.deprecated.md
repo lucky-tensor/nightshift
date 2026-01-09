@@ -57,7 +57,7 @@ In `globalStorage/storage.json`:
 
 These suggest agent behavior can be configured, but not necessarily custom modes.
 
-## Implications for Dark Factory
+## Implications for Nightshift
 
 ### Current Assessment
 - ❌ No documented way to create custom modes via CLI
@@ -67,13 +67,13 @@ These suggest agent behavior can be configured, but not necessarily custom modes
 ### Potential Use Cases (if custom modes exist)
 1. **Model-specific modes** - Different modes for different models
 2. **Task-specific modes** - Specialized modes for testing, reviewing, etc.
-3. **Persona modes** - Map Dark Factory personas to Antigravity modes
+3. **Persona modes** - Map Nightshift personas to Antigravity modes
 
 ### Recommendations
 
 **For MVP**:
 - ✅ Use built-in modes (ask, edit, agent)
-- ✅ Map Dark Factory personas to appropriate built-in modes:
+- ✅ Map Nightshift personas to appropriate built-in modes:
   - Engineer persona → `agent` mode
   - Tester persona → `agent` mode  
   - Reviewer persona → `ask` or `edit` mode
@@ -89,7 +89,7 @@ These suggest agent behavior can be configured, but not necessarily custom modes
 
 **Custom modes are mentioned but not documented or easily accessible via CLI.**
 
-For Dark Factory MVP, we should:
+For Nightshift MVP, we should:
 - Use the three built-in modes
 - Not rely on custom mode functionality
 - Revisit in Phase 2+ if needed

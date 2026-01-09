@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-The next wave of AI-native software companies will be led by **Product Managers with Engineering Intuition** - people who understand systems thinking, can read (if not write) code, and have the strategic vision to direct autonomous agents. Dark Factory should be built to serve this emerging persona, meeting them in their native environments (Notion, Linear, Slack) rather than requiring them to descend into terminal emulators and monospace fonts.
+The next wave of AI-native software companies will be led by **Product Managers with Engineering Intuition** - people who understand systems thinking, can read (if not write) code, and have the strategic vision to direct autonomous agents. Nightshift should be built to serve this emerging persona, meeting them in their native environments (Notion, Linear, Slack) rather than requiring them to descend into terminal emulators and monospace fonts.
 
 ---
 
 ## Hypothesis Statement
 
-**If** we build Dark Factory interfaces that mirror the mental models of technical product managers (roadmaps, features, outcomes, dependencies) and integrate with their native tools (Notion, Linear, Slack, Figma), **then** we unlock a 10x larger market and enable a new class of "Factory Operators" who can direct autonomous engineering without writing code, **because** the PM's articulation of business intent is the most valuable input to an AI agent, and the current friction is in _translation_, not _capability_.
+**If** we build Nightshift interfaces that mirror the mental models of technical product managers (roadmaps, features, outcomes, dependencies) and integrate with their native tools (Notion, Linear, Slack, Figma), **then** we unlock a 10x larger market and enable a new class of "Factory Operators" who can direct autonomous engineering without writing code, **because** the PM's articulation of business intent is the most valuable input to an AI agent, and the current friction is in _translation_, not _capability_.
 
 ---
 
@@ -42,7 +42,7 @@ The next wave of AI-native software companies will be led by **Product Managers 
 
 ## The Mental Model Gap
 
-### Current Dark Factory Mental Model (Engineer-Centric)
+### Current Nightshift Mental Model (Engineer-Centric)
 
 ```
 worktree → branch → task → agent → commit → merge
@@ -65,10 +65,10 @@ Today, a PM must:
 5. Review PRs they barely understand
 6. Hope the output matches intent
 
-With Dark Factory (Current):
+With Nightshift (Current):
 
 1. PM still writes PRD
-2. Engineer translates to Dark Factory tasks
+2. Engineer translates to Nightshift tasks
 3. Agent executes
 4. PM still can't see/understand the work directly
 
@@ -91,9 +91,9 @@ With Dark Factory (Current):
 **Current (Engineer-Centric):**
 
 ```bash
-$ dark-factory project create --name "user-auth"
-$ dark-factory task add --project user-auth --title "Implement login"
-$ dark-factory run --task abc123 --agent coder
+$ nightshift project create --name "user-auth"
+$ nightshift task add --project user-auth --title "Implement login"
+$ nightshift run --task abc123 --agent coder
 $ git log --oneline
 ```
 
@@ -104,7 +104,7 @@ $ git log --oneline
 PM writes: "We need user authentication with email/password
 and OAuth support. Target: 2 weeks. Priority: High."
 
-[Dark Factory responds in Notion comment]
+[Nightshift responds in Notion comment]
 "I've created a feature plan:
  • Milestone 1: Email/Password (3 days)
  • Milestone 2: OAuth Integration (4 days)
@@ -138,7 +138,7 @@ The most valuable input to any software project is **clear articulation of inten
 
 1. **PMs Have the Context**: They understand the customer, the market, the competitive landscape. This context is exactly what agents need to make good decisions.
 
-2. **10x Market Expansion**: There are ~500K software engineers in the US who might use Dark Factory. There are ~1.5M product managers and business analysts. Building for PMs triples the addressable market.
+2. **10x Market Expansion**: There are ~500K software engineers in the US who might use Nightshift. There are ~1.5M product managers and business analysts. Building for PMs triples the addressable market.
 
 3. **The Terminal is a Filter, Not a Feature**: Requiring terminal proficiency filters out 90% of potential users. It's not adding value - it's gatekeeping.
 
@@ -160,7 +160,7 @@ The complexity of software development exists for a reason. Attempting to hide i
 
 2. **Precision Requires Precision Interfaces**: Natural language is ambiguous. "Make it faster" means different things to different people. The terminal's apparent hostility is actually its strength - it forces clarity.
 
-3. **The Jira Trap**: If you build a "friendly" interface for PMs, you'll end up rebuilding Jira/Linear/Asana. These tools exist. They're not the bottleneck. The bottleneck is engineering capacity, which Dark Factory solves - for engineers.
+3. **The Jira Trap**: If you build a "friendly" interface for PMs, you'll end up rebuilding Jira/Linear/Asana. These tools exist. They're not the bottleneck. The bottleneck is engineering capacity, which Nightshift solves - for engineers.
 
 4. **Context Collapse**: PMs don't understand the codebase. When an agent makes a mistake, a PM can't debug it. They become a "prompt middleman" who adds latency without adding value.
 
@@ -199,7 +199,7 @@ The debate reveals a false dichotomy. The question isn't "PMs vs Engineers" but 
 
 ### The Product Implications
 
-Dark Factory should offer **multiple interfaces at different abstraction levels**:
+Nightshift should offer **multiple interfaces at different abstraction levels**:
 
 | Interface        | User                | Abstraction Level |
 | ---------------- | ------------------- | ----------------- |
@@ -214,20 +214,20 @@ Dark Factory should offer **multiple interfaces at different abstraction levels*
 
 ## Proposed Features
 
-### 1. Dark Factory for Notion
+### 1. Nightshift for Notion
 
 - Embed factory status in Notion pages
 - Convert PRD text to feature plans via slash command
 - Daily/weekly progress updates as Notion comments
 
-### 2. Dark Factory for Slack
+### 2. Nightshift for Slack
 
 - `/factory status` - Current state of all features
 - `/factory start [feature]` - Initiate work from Slack
 - Daily digest bot with progress + blockers
 - Interactive buttons for approvals
 
-### 3. Dark Factory Dashboard (Web)
+### 3. Nightshift Dashboard (Web)
 
 - Roadmap view (Gantt-style)
 - Feature cards with real-time status
@@ -304,10 +304,10 @@ Dark Factory should offer **multiple interfaces at different abstraction levels*
 
 The terminal-first approach serves the 10% of potential users who are already comfortable with developer tools. The remaining 90% - including the technical PMs who increasingly direct product development - are locked out by an interface choice, not by capability.
 
-By building multiple interfaces at multiple abstraction levels, Dark Factory can serve both personas without compromising for either. The PM gets a roadmap view. The engineer gets a terminal. The factory does the work.
+By building multiple interfaces at multiple abstraction levels, Nightshift can serve both personas without compromising for either. The PM gets a roadmap view. The engineer gets a terminal. The factory does the work.
 
 **The factory doesn't care who's giving the orders. It just needs clear intent.**
 
 ---
 
-_This hypothesis proposes that Dark Factory's long-term competitive advantage lies not in being the best terminal tool, but in being the best translation layer between human intent and autonomous engineering - regardless of how that intent is expressed._
+_This hypothesis proposes that Nightshift's long-term competitive advantage lies not in being the best terminal tool, but in being the best translation layer between human intent and autonomous engineering - regardless of how that intent is expressed._

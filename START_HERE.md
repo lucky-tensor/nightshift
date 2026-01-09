@@ -1,14 +1,14 @@
-# START HERE: Dark Factory Knowledge Base
+# START HERE: Nightshift Knowledge Base
 
 ## Welcome
 
-This is the entry point for the Dark Factory codebase. All agents and developers should start here to understand the project structure, goals, and current state.
+This is the entry point for the Nightshift codebase. All agents and developers should start here to understand the project structure, goals, and current state.
 
 ## Canonical Documentation Index
 
 ### 1. Product Vision (The Why)
 
-- [Vision & Goals](./docs/product_vision/1-vision.md): High-level purpose of the Dark Factory.
+- [Vision & Goals](./docs/product_vision/1-vision.md): High-level purpose of the Nightshift.
 
 ### 2. Product Features (The What)
 

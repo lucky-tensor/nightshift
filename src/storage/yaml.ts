@@ -1,7 +1,7 @@
 /**
  * YAML Storage Engine
  *
- * Provides type-safe YAML file persistence for Dark Factory state.
+ * Provides type-safe YAML file persistence for Nightshift state.
  * Uses atomic writes and file locking for safety.
  */
 

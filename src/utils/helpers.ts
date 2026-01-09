@@ -1,5 +1,5 @@
 /**
- * Common utility functions for Dark Factory
+ * Common utility functions for Nightshift
  *
  * This module provides reusable helper functions to promote DRY principles
  * and maintain consistency across the codebase.
@@ -242,7 +242,7 @@ export function logError(message: string): void {
  *
  * @example
  * ```typescript
- * logDim("Storage location: ~/.dark-factory/");
+ * logDim("Storage location: ~/.nightshift/");
  * ```
  */
 export function logDim(message: string): void {

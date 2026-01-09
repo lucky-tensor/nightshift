@@ -1,10 +1,10 @@
-# Feature Spec: Dark Factory Knowledge Base (DFKB)
+# Feature Spec: Nightshift Knowledge Base (DFKB)
 
 ## 1. Overview
 
-The Dark Factory Knowledge Base (DFKB) is the central nervous system of the codebase, designed specifically for autonomous agent consumption. It operates in two distinct modes:
+The Nightshift Knowledge Base (DFKB) is the central nervous system of the codebase, designed specifically for autonomous agent consumption. It operates in two distinct modes:
 
-1.  **Bootstrap (The Blitz):** A massive, one-time initialization event to convert a legacy or empty repo into a Dark Factory compliant environment.
+1.  **Bootstrap (The Blitz):** A massive, one-time initialization event to convert a legacy or empty repo into a Nightshift compliant environment.
 2.  **Steady State (The Garden):** A continuous background process that maintains truth across documentation and code through "Cascade Updates."
 
 ## 2. Mode 1: Bootstrap ("The Blitz")

@@ -16,7 +16,7 @@ export class CodeIndexManager {
 
     constructor(projectPath: string) {
         this.projectPath = projectPath;
-        this.indexPath = join(projectPath, ".dark-factory", "code-index.json");
+        this.indexPath = join(projectPath, ".nightshift", "code-index.json");
         this.index = this.loadIndex();
     }
 

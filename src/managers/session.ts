@@ -12,11 +12,11 @@ export class SessionManager {
     }
 
     private getSessionPath(sessionId: string): string {
-        return join(this.factory.rootPath, ".dark-factory", "sessions", `${sessionId}.yaml`);
+        return join(this.factory.rootPath, ".nightshift", "sessions", `${sessionId}.yaml`);
     }
 
     private ensureSessionsDir() {
-        const dir = join(this.factory.rootPath, ".dark-factory", "sessions");
+        const dir = join(this.factory.rootPath, ".nightshift", "sessions");
         if (!existsSync(dir)) {
             mkdirSync(dir, { recursive: true });
         }

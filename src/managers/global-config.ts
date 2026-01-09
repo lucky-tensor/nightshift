@@ -5,7 +5,7 @@ import { parse, stringify } from "yaml";
 import { v4 as uuid } from "uuid";
 import type { GlobalConfig, KnownFactory } from "../types";
 
-const GLOBAL_CONFIG_DIR = join(homedir(), ".config", "dark-factory");
+const GLOBAL_CONFIG_DIR = join(homedir(), ".config", "nightshift");
 const CONFIG_FILE = join(GLOBAL_CONFIG_DIR, "config.yaml");
 
 export class GlobalConfigManager {

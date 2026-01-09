@@ -16,11 +16,11 @@
 
 ## Phase 4: CLI & Workflow
 
-- [ ] Implement `df factory init` command
-- [ ] Implement `df product create` command
-- [ ] Implement `df product plan` command
-- [ ] Implement `df product work` command
-- [ ] Implement `df product merge` command
+- [ ] Implement `nightshift factory init` command
+- [ ] Implement `nightshift product create` command
+- [ ] Implement `nightshift product plan` command
+- [ ] Implement `nightshift product work` command
+- [ ] Implement `nightshift product merge` command
 
 ## Phase 5: Testing & Validation
 

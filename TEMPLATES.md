@@ -1,19 +1,19 @@
-# Dark Factory Templates
+# Nightshift Templates
 
-Templates define the behavior and instructions for Dark Factory's autonomous agents. Each template is a markdown file that configures how a specific agent persona approaches tasks.
+Templates define the behavior and instructions for Nightshift's autonomous agents. Each template is a markdown file that configures how a specific agent persona approaches tasks.
 
 ## Installation
 
 Templates should be installed in your global OpenCode plugin directory:
 
 ```bash
-mkdir -p ~/.config/opencode/plugin/dark-factory/templates
-cp templates/*.md ~/.config/opencode/plugin/dark-factory/templates/
+mkdir -p ~/.config/opencode/plugin/nightshift/templates
+cp templates/*.md ~/.config/opencode/plugin/nightshift/templates/
 ```
 
 ## Available Templates
 
-Dark Factory includes the following default templates:
+Nightshift includes the following default templates:
 
 ### Core Agent Templates
 
@@ -129,8 +129,8 @@ You can create custom templates for specialized agent behaviors.
 
 1. Copy an existing template as a starting point:
    ```bash
-   cp ~/.config/opencode/plugin/dark-factory/templates/engineer.md \
-      ~/.config/opencode/plugin/dark-factory/templates/my-agent.md
+   cp ~/.config/opencode/plugin/nightshift/templates/engineer.md \
+      ~/.config/opencode/plugin/nightshift/templates/my-agent.md
    ```
 
 2. Modify the template to define your agent's behavior
@@ -299,7 +299,7 @@ If you see "Template not found" errors:
 
 1. Check template location:
    ```bash
-   ls -la ~/.config/opencode/plugin/dark-factory/templates/
+   ls -la ~/.config/opencode/plugin/nightshift/templates/
    ```
 
 2. Verify file naming matches subagent name:
@@ -310,7 +310,7 @@ If you see "Template not found" errors:
 
 3. Ensure templates were copied correctly:
    ```bash
-   cp templates/*.md ~/.config/opencode/plugin/dark-factory/templates/
+   cp templates/*.md ~/.config/opencode/plugin/nightshift/templates/
    ```
 
 ### Variables Not Substituting
@@ -328,7 +328,7 @@ Have a useful custom template? Consider sharing it with the community:
 1. Create a template following best practices above
 2. Test it with several tasks to ensure reliability
 3. Document the use case and any special requirements
-4. Submit a PR to the Dark Factory repository
+4. Submit a PR to the Nightshift repository
 
 ## Examples in the Wild
 

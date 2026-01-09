@@ -109,8 +109,8 @@ class GitManager {
 
 ### 3.2 CLI Integration
 
-- `dark-factory log --brain`: Displays the commit history with the "Why" (prompt/context) expanded.
-- `dark-factory replay <commit-hash>`: Interactive mode to re-run a specific commit's task.
+- `nightshift log --brain`: Displays the commit history with the "Why" (prompt/context) expanded.
+- `nightshift replay <commit-hash>`: Interactive mode to re-run a specific commit's task.
 
 ### 3.3 The "Diff Inversion" Strategy
 

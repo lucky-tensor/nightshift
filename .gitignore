@@ -37,8 +37,8 @@ Thumbs.db
 *.swo
 *~
 
-# Dark Factory specific
-.dark-factory/
+# Nightshift specific
+.nightshift/
 *.yaml.lock
 *.yaml.bak
 

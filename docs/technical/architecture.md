@@ -1,4 +1,4 @@
-# Dark Factory MVP Architecture
+# Nightshift MVP Architecture
 
 ## Hierarchy
 
@@ -73,7 +73,7 @@ Factory (singleton instance)
 │       ├── src/
 │       └── ...
 │
-~/.dark-factory/
+~/.nightshift/
 ├── factory.yaml              # Factory state
 ├── products/
 │   └── {product-id}.yaml     # Product metadata (points to Root & Repo paths)
@@ -85,7 +85,7 @@ Factory (singleton instance)
 
 ## CLI Architecture
 
-The Dark Factory CLI (`dark-factory`) is a standalone TUI application built with Ink and React.
+The Nightshift CLI (`nightshift`) is a standalone TUI application built with Ink and React.
 
 ### Components
 
@@ -168,11 +168,11 @@ The Dark Factory CLI (`dark-factory`) is a standalone TUI application built with
 
 ### Phase 4: CLI & Workflow
 
-- [ ] `df factory init`
-- [ ] `df product create`
-- [ ] `df product plan`
-- [ ] `df product work`
-- [ ] `df product merge`
+- [ ] `nightshift factory init`
+- [ ] `nightshift product create`
+- [ ] `nightshift product plan`
+- [ ] `nightshift product work`
+- [ ] `nightshift product merge`
 
 ### Phase 5: Testing & Validation
 

@@ -2,11 +2,11 @@
 
 ## Overview
 
-This document guides an AI agent on how to "Bootstrap" an existing repository into the **Dark Factory Methodology**.
+This document guides an AI agent on how to "Bootstrap" an existing repository into the **Nightshift Methodology**.
 
 ## Instructions for the Agent
 
-If a user asks you to "Bootstrap this repo using Dark Factory", follow these steps:
+If a user asks you to "Bootstrap this repo using Nightshift", follow these steps:
 
 ### 1. Create the Anchor
 
