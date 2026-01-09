@@ -4,98 +4,44 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
 import { execSync } from "child_process";
 import { parse, stringify } from "yaml";
 import type { FactoryConfig, Project } from "../types";
+import { GitManager } from "./git";
+import { CodeIndexManager } from "./code-index";
+import { MultiAgentManager } from "./multi-agent";
 
 export class ProjectManager {
     private factory: FactoryConfig;
+    private git: GitManager;
 
     constructor(factory: FactoryConfig) {
         this.factory = factory;
+        this.git = new GitManager(factory.mainRepoPath);
     }
 
     /**
-     * Helper to detect default branch (main or master)
+     * Create a new Project (Worktree) with Enhanced Workflow
      */
-    private getDefaultBranch(): string {
-        try {
-            // Check if main exists
-            execSync("git rev-parse --verify main", {
-                cwd: this.factory.mainRepoPath,
-                stdio: "ignore",
-            });
-            return "main";
-        } catch {
-            try {
-                // Check if master exists
-                execSync("git rev-parse --verify master", {
-                    cwd: this.factory.mainRepoPath,
-                    stdio: "ignore",
-                });
-                return "master";
-            } catch {
-                // Fallback to HEAD
-                return "HEAD";
-            }
-        }
-    }
-
-    /**
-     * Create a new Project (Worktree)
-     * 1. Create worktree dir
-     * 2. git worktree add
-     * 3. Create metadata
-     */
-    createProject(name: string, parentContext?: string): Project {
+    async createProject(name: string, parentContext?: string): Promise<Project> {
         const projectId = uuid();
-        const branchName = `df/${name}`;
-        const baseBranch = this.getDefaultBranch();
 
-        // Worktree is a sibling to the main repo in the Factory Root
-        const worktreePath = join(this.factory.rootPath, `worktree-${name}`);
+        // 1. Create Worktree using GitManager
+        const worktreePath = await this.git.createWorktree(projectId);
+        const branchName = this.git.getCurrentBranch(worktreePath);
 
-        if (existsSync(worktreePath)) {
-            throw new Error(`Worktree path already exists: ${worktreePath}`);
-        }
-
-        // Create Branch & Worktree
-        // We run git commands from the MAIN REPO
-        try {
-            // Check if branch exists
-            let branchExists = false;
-            try {
-                execSync(`git rev-parse --verify ${branchName}`, {
-                    cwd: this.factory.mainRepoPath,
-                    stdio: "ignore",
-                });
-                branchExists = true;
-            } catch {
-                branchExists = false;
-            }
-
-            // Create branch if it doesn't exist
-            if (!branchExists) {
-                execSync(`git branch ${branchName} ${baseBranch}`, {
-                    cwd: this.factory.mainRepoPath,
-                });
-            }
-
-            execSync(`git worktree add ${worktreePath} ${branchName}`, {
-                cwd: this.factory.mainRepoPath,
-            });
-        } catch (e) {
-            throw new Error(`Failed to create git worktree: ${e}`);
-        }
-
-        // Initialize Context
+        // 2. Initialize Context with Git-Brain metadata
         const contextPath = join(worktreePath, "initial-context.md");
-        writeFileSync(contextPath, parentContext || "# Initial Context\n\nNo context provided.");
+        const contextContent = parentContext || "# Initial Context\n\nNo context provided.";
+        writeFileSync(contextPath, contextContent);
 
-        // Initial Commit for the Project
-        try {
-            execSync("git add initial-context.md", { cwd: worktreePath });
-            execSync('git commit -m "chore: Initialize project context"', { cwd: worktreePath });
-        } catch (e) {
-            console.warn("Failed to create initial commit:", e);
-        }
+        await this.git.commitWithMetadata(worktreePath, "chore: Initialize project context", {
+            prompt: `Initialize project ${name} with context`,
+            expectedOutcome: "Project context file created and committed",
+            contextSummary: "Project initialization",
+            agentId: "system",
+        });
+
+        // 3. Initialize Code Index
+        const indexer = new CodeIndexManager(worktreePath);
+        await indexer.indexProject();
 
         const project: Project = {
             id: projectId,
@@ -114,6 +60,24 @@ export class ProjectManager {
 
         this.saveProject(project);
         return project;
+    }
+
+    /**
+     * Delete a project and its worktree
+     */
+    async deleteProject(projectId: string): Promise<void> {
+        const project = this.getProject(projectId);
+        if (!project) return;
+
+        // 1. Remove Worktree
+        await this.git.removeWorktree(projectId);
+
+        // 2. Remove Metadata
+        const path = this.getProjectStoragePath(projectId);
+        if (existsSync(path)) {
+            const fs = require("fs");
+            fs.unlinkSync(path);
+        }
     }
 
     private getProjectStoragePath(id: string): string {

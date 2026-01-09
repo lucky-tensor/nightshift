@@ -1,0 +1,17 @@
+{
+    "name": "dark-factory-prototypes",
+    "version": "0.1.0",
+    "description": "Standalone prototypes for Dark Factory features",
+    "main": "index.js",
+    "scripts": {
+        "diff-brain": "cd diff-brain && npx ts-node index.ts",
+        "code-index": "cd code-index && npx ts-node index.ts",
+        "multi-agent": "cd multi-agent && npx ts-node index.ts",
+        "blackboard": "cd blackboard && npx ts-node index.ts",
+        "all": "npm run diff-brain && npm run code-index && npm run multi-agent && npm run blackboard"
+    },
+    "dependencies": {
+        "typescript": "^5.0.0",
+        "ts-node": "^10.9.0"
+    }
+}

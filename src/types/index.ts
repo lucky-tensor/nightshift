@@ -113,14 +113,21 @@ export interface Transaction {
     date: string;
 }
 
+export type TaskStatus = "pending" | "in_progress" | "completed" | "failed";
+
 export interface TaskPrompt {
     id: string;
+    title: string;
     description: string;
-}
-
-export interface TaskStatus {
-    id: string;
-    status: "pending" | "in_progress" | "completed" | "failed";
+    status: TaskStatus;
+    priority: number;
+    dependencies: string[];
+    createdAt: string;
+    startedAt?: string;
+    completedAt?: string;
+    assignedSubagent?: string;
+    completionConfidence: number;
+    verificationNotes: string[];
 }
 
 export interface KnowledgeEntry {
@@ -158,3 +165,81 @@ export interface Product {
 }
 
 export interface Factory extends FactoryConfig {}
+
+// ============================================================================
+// ENHANCED GIT WORKFLOW (Brain of the Factory)
+// ============================================================================
+
+export interface CommitMetadata {
+    prompt: string; // The "Intent": Minimal instructions required to reproduce the change
+    diffReconstructionHint: string; // "How": Specific implementation details (e.g. "Use early return for error handling")
+    expectedOutcome: string; // "Goal": Functional verification criteria
+    filesChanged: string[]; // List of files this prompt is intended to modify
+    contextSummary: string; // "Why": Brief architectural context
+    agentId?: string;
+    sessionId?: string;
+}
+
+export interface EnhancedCommitMessage {
+    title: string; // Short descriptive title
+    metadata: CommitMetadata; // Structured metadata for replay
+}
+
+// ============================================================================
+// CODE INDEXING SYSTEM
+// ============================================================================
+
+export interface CodeIndex {
+    embeddings: CodeEmbedding[];
+    keywords: KeywordIndex[];
+    lastUpdated: string;
+}
+
+export interface CodeEmbedding {
+    filePath: string;
+    contentHash: string;
+    embedding: number[]; // Vector representation
+    type: "function" | "class" | "interface" | "comment" | "documentation";
+}
+
+export interface KeywordIndex {
+    keyword: string;
+    locations: CodeLocation[];
+    frequency: number;
+}
+
+export interface CodeLocation {
+    filePath: string;
+    lineStart: number;
+    lineEnd: number;
+    type: "definition" | "usage" | "documentation";
+}
+
+// ============================================================================
+// MULTI-AGENT ARCHITECTURE
+// ============================================================================
+
+export interface AgentContext {
+    id: string;
+    type: "planner" | "coder" | "curator" | "tester" | "reviewer";
+    state: "idle" | "active" | "completed" | "failed";
+    currentTask?: string;
+    sharedContext: SharedContext;
+}
+
+export interface SharedContext {
+    projectId: string;
+    sessionId: string;
+    codeIndex: CodeIndex;
+    recentCommits: EnhancedCommitMessage[];
+    activeTasks: TaskStatus[];
+    knowledgeBase: KnowledgeEntry[];
+}
+
+export interface AgentCollaboration {
+    fromAgentId: string;
+    toAgentId: string;
+    messageType: "handoff" | "request" | "response" | "status";
+    content: string;
+    timestamp: string;
+}

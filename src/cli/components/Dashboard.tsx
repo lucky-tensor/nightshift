@@ -98,11 +98,11 @@ const Dashboard = () => {
         }
     };
 
-    const handleProjectCreate = (name: string, description: string) => {
+    const handleProjectCreate = async (name: string, description: string) => {
         if (!selectedFactory) return;
         try {
             const pm = new ProjectManager(selectedFactory);
-            pm.createProject(name, `# Task: ${name}\n\n${description}`);
+            await pm.createProject(name, `# Task: ${name}\n\n${description}`);
             refreshProjects(selectedFactory);
             setView("dashboard");
         } catch (err) {

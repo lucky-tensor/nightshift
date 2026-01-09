@@ -9,9 +9,70 @@ import { readFileSync } from "fs";
 
 export class FactoryManager {
     private globalConfig: GlobalConfigManager;
+    private currentFactory: FactoryConfig | null = null;
 
     constructor() {
         this.globalConfig = new GlobalConfigManager();
+    }
+
+    /**
+     * Get the currently loaded factory
+     */
+    getFactory(): FactoryConfig | null {
+        return this.currentFactory;
+    }
+
+    /**
+     * Set the currently loaded factory
+     */
+    setFactory(factory: FactoryConfig) {
+        this.currentFactory = factory;
+    }
+
+    /**
+     * Get storage directory for current factory metadata
+     */
+    getStorageDir(): string | null {
+        if (!this.currentFactory) return null;
+        return join(this.currentFactory.rootPath, ".dark-factory");
+    }
+
+    /**
+     * Get factory status summary
+     */
+    getStatus() {
+        if (!this.currentFactory) {
+            return {
+                budget: { used: 0, limit: 0 },
+                products: 0,
+                tokens: 0,
+            };
+        }
+
+        // In a real implementation, these would be calculated from project metrics
+        return {
+            budget: {
+                used: 0, // Placeholder
+                limit: this.currentFactory.budgetLimit,
+            },
+            products: 0, // Placeholder
+            tokens: 0, // Placeholder
+        };
+    }
+
+    /**
+     * Initialize/Create a new Factory (and Git Repo)
+     */
+    async initialize(name: string, description: string, options: any = {}): Promise<FactoryConfig> {
+        const rootPath = options.path || join(process.cwd(), name);
+        return this.createFactory(name, rootPath);
+    }
+
+    /**
+     * Reset the factory state (for dev/emergency use)
+     */
+    reset() {
+        this.currentFactory = null;
     }
 
     /**
@@ -67,6 +128,7 @@ export class FactoryManager {
         // 4. Register Globally
         this.globalConfig.registerFactory(name, rootPath);
 
+        this.currentFactory = config;
         return config;
     }
 
@@ -79,7 +141,9 @@ export class FactoryManager {
 
         try {
             const content = readFileSync(configPath, "utf-8");
-            return parse(content) as FactoryConfig;
+            const config = parse(content) as FactoryConfig;
+            this.currentFactory = config;
+            return config;
         } catch (e) {
             console.error("Failed to load factory config:", e);
             return null;

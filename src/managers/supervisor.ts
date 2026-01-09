@@ -11,8 +11,10 @@ import { ProjectManager } from "./project";
 import { TaskManager } from "./task";
 import { FactoryManager } from "./factory";
 import { logInfo, logWarning } from "../utils/helpers";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
+import { GitManager } from "./git";
+import { CodeIndexManager } from "./code-index";
 
 export class FactorySupervisor {
     private intervalId: Timer | null = null;
@@ -68,17 +70,29 @@ export class FactorySupervisor {
         const factory = this.factoryManager.getFactory();
         if (!factory) return;
 
-        // Update external status file for UI/Sidebar visibility
-        this.updateStatusFile(factory);
-
-        if (factory.status !== "active") return;
-
         // 2. Monitor Active Projects
         const projects = this.projectManager.listProjects();
         const activeProjects = projects.filter((p) => p.status === "active");
 
+        // Update external status file with enhanced info
+        this.updateStatusFile(factory, activeProjects);
+
         for (const project of activeProjects) {
             await this.checkProjectHealth(project);
+            // Re-index project code periodically
+            await this.refreshProjectIndex(project);
+        }
+    }
+
+    /**
+     * Re-index code for an active project
+     */
+    private async refreshProjectIndex(project: any) {
+        try {
+            const indexer = new CodeIndexManager(project.worktreePath);
+            await indexer.indexProject();
+        } catch (error) {
+            console.error(`[Supervisor] Failed to re-index project ${project.name}:`, error);
         }
     }
 
@@ -86,18 +100,13 @@ export class FactorySupervisor {
      * Writes the current factory status to a Markdown file that can be previewed.
      * This acts as a "UI Component" for the user.
      */
-    private updateStatusFile(factory: any) {
+    private updateStatusFile(factory: any, activeProjects: any[]) {
         try {
             const status = this.factoryManager.getStatus();
-            const statusPath = join(
-                this.factoryManager.getStorageDir() || process.cwd(),
-                "FACTORY_STATUS.md"
-            );
+            const storageDir = this.factoryManager.getStorageDir();
+            if (!storageDir) return;
 
-            const projects = this.projectManager.listProjects();
-            const activeProjects = projects.filter(
-                (p) => p.status !== "completed" && p.status !== "failed"
-            );
+            const statusPath = join(storageDir, "FACTORY_STATUS.md");
 
             const lastUpdated = new Date().toLocaleTimeString();
 
@@ -105,30 +114,40 @@ export class FactorySupervisor {
             const statusIcon =
                 factory.status === "active" ? "🟢" : factory.status === "paused" ? "⏸️" : "🔴";
 
-            const md = `# ${statusIcon} Dark Factory Status
+            let md = `# ${statusIcon} Dark Factory Status\n\n`;
+            md += `**Last Updated:** ${lastUpdated}\n\n`;
 
-**Last Updated:** ${lastUpdated}
+            md += `## 📊 Overview\n`;
+            md += `| Metric | Value |\n`;
+            md += `|--------|-------|\n`;
+            md += `| **Status** | ${factory.status.toUpperCase()} |\n`;
+            md += `| **Budget** | $${status.budget.used.toFixed(2)} / $${status.budget.limit.toFixed(2)} |\n`;
+            md += `| **Products** | ${status.products} |\n`;
+            md += `| **Tokens** | ${status.tokens.toLocaleString()} |\n\n`;
 
-## 📊 Overview
-| Metric | Value |
-|--------|-------|
-| **Status** | ${factory.status.toUpperCase()} |
-| **Budget** | $${status.budget.used.toFixed(2)} / $${status.budget.limit.toFixed(2)} |
-| **Products** | ${status.products} |
-| **Tokens** | ${status.tokens.toLocaleString()} |
+            md += `## 🏗️ Active Projects\n`;
+            if (activeProjects.length > 0) {
+                md += `| Project | Status | Branch | Index Stats | Last Brain Activity |\n`;
+                md += `|---------|--------|--------|-------------|---------------------|\n`;
 
-## 🏗️ Active Projects
-${
-    activeProjects.length > 0
-        ? `| Project | Status | Branch | Cost |
-|---------|--------|--------|------|
-${activeProjects.map((p) => `| ${p.name} | ${p.status} | \`${p.workBranch}\` | $${p.totalCost.toFixed(2)} |`).join("\n")}`
-        : "_No active projects._"
-}
+                for (const p of activeProjects) {
+                    const indexer = new CodeIndexManager(p.worktreePath);
+                    const stats = indexer.getIndexStats();
 
----
-*To refresh, this file updates automatically every 60s.*
-`;
+                    const git = new GitManager(factory.mainRepoPath);
+                    const history = git.getEnhancedCommitHistory(p.worktreePath, 1);
+                    const lastActivity =
+                        history.length > 0
+                            ? `${history[0].title} (${history[0].metadata.agentId})`
+                            : "No activity";
+
+                    md += `| ${p.name} | ${p.status} | \`${p.branchName}\` | ${stats.totalEmbeddings} emb / ${stats.totalKeywords} keys | ${lastActivity} |\n`;
+                }
+            } else {
+                md += `_No active projects._\n`;
+            }
+
+            md += `\n---\n*To refresh, this file updates automatically every 60s.*\n`;
 
             writeFileSync(statusPath, md);
         } catch (error) {

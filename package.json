@@ -21,7 +21,13 @@
         "lint": "bunx eslint src/",
         "format": "bunx prettier --write \"src/**/*.ts\"",
         "format:check": "bunx prettier --check \"src/**/*.ts\"",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "prototype:diff-brain": "bun run prototypes/diff-brain/prototype.ts",
+        "prototype:code-index": "bun run prototypes/code-index/prototype.ts",
+        "prototype:multi-agent": "bun run prototypes/multi-agent/prototype.ts",
+        "prototype:blackboard": "bun run prototypes/blackboard/prototype.ts",
+        "prototype:demo": "bun run prototypes/demo.ts",
+        "prototype:all": "bun run prototype:diff-brain && echo '---' && bun run prototype:code-index && echo '---' && bun run prototype:multi-agent && echo '---' && bun run prototype:blackboard && echo '---' && bun run prototype:demo"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
