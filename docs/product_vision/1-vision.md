@@ -22,6 +22,40 @@ Current AI coding assistants require constant human supervision and cannot:
 4.  **Exploration**: Explore multiple solution paths when facing uncertain decisions.
 5.  **Transparency**: Provide clear project tracking and task management.
 
+## The Long-Term Vision
+
+We are moving toward a future where agents execute long-running engineering jobs with near-autonomy. While current model capabilities are limited, they are rapidly improving.
+
+**The Shift**: As AI takes on more of the implementation work, the primary audience for code and documentation shifts from humans to machines. This necessitates a fundamental change in how we write, manage, and document software.
+
+- **Code**: Must be hyper-explicit, prioritizing machine-readability and context over human-centric brevity.
+- **Management**: Shifts from task assignment to constraint definition and outcome verification.
+- **Documentation**: Becomes the "prompt" that drives the factory.
+
+Dark Factory provides the **Methods** (Mode 1) and the **Tools** (Mode 2) to bridge this gap, preparing repositories for the age of autonomous engineering.
+
+## Deployment Modes
+
+Dark Factory is designed to be adopted in two stages, allowing users to start with low risk and scale to full autonomy.
+
+### Mode 1: The Methodology (Low Risk)
+
+In this mode, Dark Factory is a **passive set of standards**.
+
+- **Installation**: Users simply install markdown templates (Agents, Nags, Knowledge Base) into their repository.
+- **Vendor Agnostic**: Templates are adapted to specific vendor structures (e.g., placing agent prompts in `.claude/agents/` or `.cursor/rules/`).
+- **Function**: It structures the _context_ provided to existing AI tools, improving their recall and quality without requiring a new runtime.
+
+### Mode 2: The Service (Advanced)
+
+In this mode, Dark Factory is an **active orchestration runtime**.
+
+- **Installation**: Users run the `dark-factory` CLI or web service.
+- **Function**: The service actively "prods" agents, managing their lifecycles.
+    - **Orchestration**: Assigns work to specialized agents based on expertise.
+    - **Finance Strategy**: Maximizes rate limits by switching vendors/plans (e.g., using cheap models for drafts, expensive models for review).
+    - **Continuous Operation**: Keeps working while the user sleeps.
+
 ## User Personas
 
 - **Solo Developer**: Automate large refactoring or feature development tasks to avoid context switching.

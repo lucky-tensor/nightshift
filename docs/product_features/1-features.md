@@ -1,6 +1,21 @@
 # Product Features
 
-## Core Capabilities
+## Feature Matrix by Mode
+
+### Mode 1: Methodology (Passive)
+
+These features are available simply by adopting the file structure and templates.
+
+- **Knowledge Base Structure**: `docs/` hierarchy (Vision, Features, Tech, Dev) for context grounding.
+- **Agent Personas**: Markdown templates defining specific roles (Planner, Coder, Curator).
+- **Nags**: Quality assurance checklists injected into the context window.
+- **Git-Brain Protocol**: Commit message standards for reasoning preservation.
+
+### Mode 2: Service (Active)
+
+These features require running the Dark Factory orchestration engine.
+
+## Core Capabilities (Service Mode)
 
 ### 1. Autonomous Agent Orchestration
 
