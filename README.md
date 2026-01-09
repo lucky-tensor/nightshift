@@ -54,7 +54,7 @@ The Nightshift Service is a standalone CLI/TUI that manages multiple agents, han
 
 ```bash
 # Install via curl (Linux & macOS)
-curl -fsSL https://raw.githubusercontent.com/opencode-ai/nightshift/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install.sh | bash
 
 # Run
 nightshift

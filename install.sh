@@ -2,7 +2,7 @@
 set -e
 
 # Repository configuration (Update these!)
-REPO="opencode-ai/nightshift" # Example: username/repo
+REPO="lucky-tensor/nightshift" # Example: username/repo
 BINARY_NAME="nightshift"
 INSTALL_DIR="/usr/local/bin"
 
