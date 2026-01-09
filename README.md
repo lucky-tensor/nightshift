@@ -2,55 +2,48 @@
 
 **Autonomous AI Software Factory**
 
-Dark Factory is a standalone CLI tool that orchestrates AI agents to build software products. It acts as a "Factory" environment where multiple products are developed concurrently by specialized sub-agents (Planner, Coder, Curator).
+Dark Factory is a methodology and toolset for enabling autonomous AI agents to build, maintain, and document large software projects. It shifts the focus from human-readable code to machine-reproducible "Reasoning Ledgers."
 
-## Features
+## Two Ways to Use
 
-- 🖥️ **TUI Dashboard** - Monitor your factory status, budget, and active projects in real-time.
-- 🤖 **Autonomous Agents** - Run complex tasks without constant supervision.
-- 📦 **Project Isolation** - Uses git worktrees to keep agent work separate from main branches.
-- 🏭 **Factory Management** - Orchestrate multiple concurrent software products.
-- 💰 **Finance Management** - Track costs and manage token budgets.
+### 1. The Methodology (Quickstart)
 
-## Installation & Usage
+**For: Users with existing AI coding assistants (Cursor, Windsurf, Cody, etc.)**
 
-### 1. Install Dependencies
+You don't need to install any new software. You simply adopt the **Dark Factory Standard** to give your agents better memory, context, and quality control.
+
+**Copy/Paste this prompt to your Agent:**
+
+> "Agent, I want to adopt the Dark Factory methodology for this repository. Please read the bootstrapping guide at [https://github.com/opencode-ai/dark-factory/blob/main/docs/development/agent_bootstrap_instructions.md](https://github.com/opencode-ai/dark-factory/blob/main/docs/development/agent_bootstrap_instructions.md) and execute the steps to restructure my documentation, create the START_HERE.md anchor, and install the 'Nag' quality gates."
+
+### 2. The Service (Advanced)
+
+**For: Users who want fully autonomous, long-running orchestration.**
+
+The Dark Factory Service is a standalone CLI/TUI that manages multiple agents, handles API costs, and runs while you sleep.
+
+**Features**
+
+- 🖥️ **TUI Dashboard** - Real-time factory monitoring.
+- 📦 **Project Isolation** - Git worktree sandboxing.
+- 💰 **Finance Management** - Automatic provider switching and budget tracking.
+
+**Installation**
 
 ```bash
 bun install
-```
-
-### 2. Run the CLI (TUI)
-
-```bash
 bun run start
 ```
 
-This launches the interactive dashboard.
+## Core Concepts
 
-- **First Run**: Press `Enter` to initialize the factory.
-- **New Product**: Press `n` to create a new software product.
-- **Quit**: Press `q` to exit.
+- **Git-Brain**: Commits are a "Reasoning Ledger." We store the _prompt_ and _intent_ in hidden metadata to allow perfect replayability.
+- **Access Paths**: Git branches are named like file paths (`df/session/option-a`) to show lineage.
+- **Nags**: Mandatory "Gateways of Last Resort" checklists that agents must pass before marking tasks complete.
+- **Knowledge Base**: A fractal documentation structure anchored by `START_HERE.md`.
 
-## How It Works
+## Documentation
 
-### File Structure
-
-When you create a product (e.g., "my-app"), Dark Factory creates the following structure in your output directory:
-
-```
-my-app/                 # Product Container
-├── my-app-main/        # Main Git Repository
-│   ├── .git/
-│   ├── src/
-│   ├── docs/
-│   └── ...
-└── worktree-task-123/  # Isolated Agent Workspace
-    └── ...
-```
-
-This structure ensures that agents work in isolated environments (worktrees) without messing up the main repository state until their work is verified and merged.
-
-## Architecture
-
-See [docs/FACTORY_ARCHITECTURE.md](./docs/FACTORY_ARCHITECTURE.md) for detailed architecture documentation.
+- [Start Here](./START_HERE.md) - The entry point for this repository's knowledge base.
+- [Vision](./docs/product_vision/1-vision.md)
+- [Architecture](./docs/technical/architecture.md)
