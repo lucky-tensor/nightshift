@@ -9,7 +9,7 @@ The system follows a strict hierarchy:
 
 ### Data Flow
 
-1.  **Product Creation**: Factory initializes a git repo and generates `PRD.md`.
+1.  **Product Creation**: Factory initializes a git repo and generates `product_vision/original_prd.md`.
 2.  **Planning**: Planner Agent generates `PLAN.md`.
 3.  **Execution**: PM Agent selects projects, Git Manager creates worktrees, Coder Agents execute tasks.
 4.  **Merge**: Knowledge Base Curator merges project documentation back to the product root.

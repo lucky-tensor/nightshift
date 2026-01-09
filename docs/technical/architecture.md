@@ -6,7 +6,7 @@
 Factory (singleton instance)
 └── Products (multiple software products)
     ├── Product Repo (own git repo + remote)
-    ├── PRD.md (Product Requirements Document)
+    ├── product_vision/original_prd.md (Product Requirements Document)
     ├── PLAN.md (Implementation plan)
     └── Plan
         └── Projects (git branches + worktrees)
@@ -37,7 +37,7 @@ Factory (singleton instance)
 
 1. Factory creates Product
 2. Product initializes git repo (local + remote)
-3. PRD.md created from description
+3. product_vision/original_prd.md created from description
 4. Planner agent creates PLAN.md with projects
 
 ### Project Execution
@@ -63,7 +63,7 @@ Factory (singleton instance)
 │   ├── {product-name}-main/  # Main Repository (Git Init)
 │   │   ├── .git/
 │   │   ├── README.md
-│   │   ├── PRD.md
+│   │   ├── product_vision/original_prd.md
 │   │   ├── PLAN.md
 │   │   ├── docs/
 │   │   └── src/
@@ -156,7 +156,7 @@ The Dark Factory CLI (`dark-factory`) is a standalone TUI application built with
 
 - [ ] ProductManager
 - [ ] Git repo initialization (local + remote)
-- [ ] PRD.md generation
+- [ ] product_vision/original_prd.md generation
 - [ ] PLAN.md generation
 
 ### Phase 3: Agent System

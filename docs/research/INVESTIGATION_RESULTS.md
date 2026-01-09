@@ -173,4 +173,4 @@ interface FinanceManager {
 
 **Blockers resolved**: Architecture adjusted to work within Antigravity's limitations.
 
-**Next step**: Update SPEC.md and IMPLEMENTATION_PLAN.md with findings, then proceed to Phase 0.
+**Next step**: Update technical/technical_spec.md and development/original_plan.md with findings, then proceed to Phase 0.

@@ -4,7 +4,7 @@
 
 - [ ] Implement `ProductManager` class
 - [ ] Implement Git repo initialization (local + remote) logic
-- [ ] Create `PRD.md` generation prompt/logic
+- [ ] Create `product_vision/original_prd.md` generation prompt/logic
 - [ ] Create `PLAN.md` generation prompt/logic
 
 ## Phase 3: Agent System

@@ -10,7 +10,7 @@ We have established the basic types (`Factory`, `Product`, `Plan`) and storage m
 
 - Implement `ProductManager`.
 - Build git repo initialization logic (local + remote).
-- Automate `PRD.md` and `PLAN.md` generation from user prompts.
+- Automate `product_vision/original_prd.md` and `PLAN.md` generation from user prompts.
 
 ### Phase 3: Agent System
 

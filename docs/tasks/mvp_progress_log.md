@@ -30,7 +30,7 @@
 
 ### Documentation
 
-- ✅ **FACTORY_ARCHITECTURE.md** - Complete architecture overview
+- ✅ **technical/architecture.md** - Complete architecture overview
 - ✅ **Comprehensive JSDoc** - All new types documented
 
 ## ✅ Completed (Phase 2 & 3)
@@ -93,7 +93,7 @@
     - Integration with OpenCode adapter for AI inference
 
 - ✅ **ProductManager AI Methods**
-    - `generateProductPRD()` - Generate PRD.md with AI
+    - `generateProductPRD()` - Generate product_vision/original_prd.md with AI
     - `generateProductPlan()` - Generate implementation plan with AI
     - Auto-commit generated documents to git
 

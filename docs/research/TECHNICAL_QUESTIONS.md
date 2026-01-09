@@ -352,7 +352,7 @@ done
 2. Run Q1 investigation (quota detection)
 3. Run Q2 investigation (provider switching)
 4. Document findings in this file
-5. Update SPEC.md and IMPLEMENTATION_PLAN.md based on findings
+5. Update technical/technical_spec.md and development/original_plan.md based on findings
 
 ### Decision Points
 
