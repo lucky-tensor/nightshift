@@ -6,6 +6,14 @@ REPO="lucky-tensor/nightshift" # Example: username/repo
 BINARY_NAME="nightshift"
 INSTALL_DIR="/usr/local/bin"
 
+# Ensure OpenCode is installed
+if ! command -v opencode &> /dev/null; then
+    echo "OpenCode not found. Installing..."
+    curl -fsSL https://opencode.ai/install | bash
+else
+    echo "OpenCode is already installed."
+fi
+
 # Detect OS and Architecture
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
