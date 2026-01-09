@@ -21,10 +21,10 @@ We need to change our workflow and our tools to get there faster.
 ## Core Concepts
 
 - **Git-Brain**: Commits are a "Reasoning Ledger." We store the _prompt_ and _intent_ in hidden metadata to allow perfect replayability.
-- **Independence**: Vendor-agnostic and RAG-free. Git is the brain.
+- **Deep Context**: A "Documentation Fractal" anchored by `START_HERE.md` allows agents to situate themselves without RAG, vector stores, or "magic."
+- **Multi-Agent**: Use different reasoning providers for what they do best, at the best cost, for the right unit of work.
 - **Semantic Worktrees**: Git branches are named like file paths (`ns/session/option-a`) to show lineage and intent.
 - **Nags**: Mandatory "Gateways of Last Resort" checklists that agents must pass before marking tasks complete.
-- **Knowledge Base**: A fractal documentation structure anchored by `START_HERE.md`.
 
 ## Two Ways to Use
 
