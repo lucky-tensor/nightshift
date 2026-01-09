@@ -131,16 +131,16 @@ export class GitManager {
     ): Promise<void> {
         // Calculate the actual diff to help "verify" if the metadata is sufficient
         const actualDiff = execSync(`git -C "${worktreePath}" diff HEAD`).toString();
-        
-        // In a real implementation, we might run a "compression agent" here 
+
+        // In a real implementation, we might run a "compression agent" here
         // to turn the actualDiff + chat history into the minimal metadata.prompt
-        
+
         const enhancedMessage: EnhancedCommitMessage = {
             title,
             metadata: {
                 ...metadata,
                 // We could even store a hash of the diff to verify replay fidelity
-            }
+            },
         };
 
         const messageJson = JSON.stringify(enhancedMessage, null, 2);
@@ -153,8 +153,6 @@ export class GitManager {
             if (!(error as any).stdout?.toString().includes("nothing to commit")) {
                 throw new Error(`Failed to commit Diff-Brain changes: ${error}`);
             }
-        }
-    }
         }
     }
 
@@ -219,14 +217,14 @@ export class GitManager {
 
     /**
      * Attempt to replay a commit's prompt to verify reproducibility
-     * 
+     *
      * @param worktreePath - Absolute path to the worktree
      * @param commitHash - Hash to replay
      * @param modelCallback - Function that simulates the LLM call
      * @returns Comparison result between original diff and replayed diff
      */
     async replayCommit(
-        worktreePath: string, 
+        worktreePath: string,
         commitHash: string,
         modelCallback: (prompt: string) => Promise<string>
     ): Promise<{
@@ -240,22 +238,20 @@ export class GitManager {
             throw new Error(`No metadata found for commit ${commitHash}`);
         }
 
-        const originalDiff = execSync(
-            `git -C "${worktreePath}" show ${commitHash}`
-        ).toString();
+        const originalDiff = execSync(`git -C "${worktreePath}" show ${commitHash}`).toString();
 
         // 1. Get the state before this commit
         execSync(`git -C "${worktreePath}" checkout ${commitHash}^`);
 
         // 2. Run the prompt through the model
         const replayedCode = await modelCallback(enhanced.metadata.prompt);
-        
+
         // 3. (Simplified) In a real scenario, the agent would apply changes.
         // For this demo, we assume the agent replaces the files.
         // ... implementation details for applying changes ...
 
         const replayedDiff = "REPLAY_RESULT_PLACEHOLDER"; // Placeholder
-        
+
         // 4. Reset worktree back to HEAD
         execSync(`git -C "${worktreePath}" checkout -`);
 
@@ -263,16 +259,8 @@ export class GitManager {
             match: false, // Placeholder
             originalDiff,
             replayedDiff,
-            similarity: 0.5 // Placeholder
+            similarity: 0.5, // Placeholder
         };
-    }
-            }
-
-            return enhancedCommits;
-        } catch (error) {
-            console.error(`Failed to get enhanced commit history: ${error}`);
-            return [];
-        }
     }
 
     /**

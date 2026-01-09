@@ -1,0 +1,66 @@
+name: Release Nightshift CLI
+
+on:
+    push:
+        branches: ["main"]
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-release:
+        name: Build and Release
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Install Dependencies
+              run: bun install
+
+            - name: Generate Release Tag
+              id: tag
+              run: |
+                  VERSION=$(grep -oE '"version": "[^"]+"' package.json | cut -d'"' -f4)
+                  SHORT_HASH=$(git rev-parse --short=6 HEAD)
+                  RELEASE_TAG="v${VERSION}-${SHORT_HASH}"
+                  echo "tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+                  echo "Generated tag: ${RELEASE_TAG}"
+
+            - name: Build Binaries
+              run: |
+                  mkdir -p dist/binaries
+
+                  echo "Building for Linux x64..."
+                  bun build --compile ./src/cli.tsx --outfile dist/binaries/nightshift-linux-amd64 --target bun-linux-x64
+
+                  echo "Building for Linux ARM64..."
+                  bun build --compile ./src/cli.tsx --outfile dist/binaries/nightshift-linux-arm64 --target bun-linux-arm64
+
+                  echo "Building for macOS x64..."
+                  bun build --compile ./src/cli.tsx --outfile dist/binaries/nightshift-darwin-amd64 --target bun-darwin-x64
+
+                  echo "Building for macOS ARM64..."
+                  bun build --compile ./src/cli.tsx --outfile dist/binaries/nightshift-darwin-arm64 --target bun-darwin-arm64
+
+                  echo "Building for Windows x64..."
+                  bun build --compile ./src/cli.tsx --outfile dist/binaries/nightshift-windows-amd64.exe --target bun-windows-x64
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ steps.tag.outputs.tag }}
+                  name: Release ${{ steps.tag.outputs.tag }}
+                  files: dist/binaries/*
+                  draft: false
+                  prerelease: false
+                  make_latest: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

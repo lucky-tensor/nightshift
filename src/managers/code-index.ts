@@ -62,51 +62,56 @@ export class CodeIndexManager {
      */
     async indexProject(): Promise<void> {
         console.log("Indexing project codebase...");
-        
+
         // Get all source files
         const sourceFiles = this.getSourceFiles();
-        
+
         // Keep track of which files we've seen to remove deleted ones later
         const seenFiles = new Set<string>();
-        
+
         // Process each file
         for (const filePath of sourceFiles) {
             seenFiles.add(filePath);
             const content = readFileSync(filePath, "utf-8");
             const currentHash = this.generateHash(content);
-            
+
             // Check if file has changed
-            const existingEmbeddings = this.index.embeddings.filter(e => e.filePath === filePath);
-            if (existingEmbeddings.length > 0 && existingEmbeddings[0].contentHash === currentHash) {
+            const existingEmbeddings = this.index.embeddings.filter((e) => e.filePath === filePath);
+            if (
+                existingEmbeddings.length > 0 &&
+                existingEmbeddings[0].contentHash === currentHash
+            ) {
                 // Skip unchanged file
                 continue;
             }
-            
+
             // Remove old entries for this file
             this.removeFileFromIndex(filePath);
-            
+
             // Re-index file
             await this.indexFile(filePath, content);
         }
-        
+
         // Remove files that no longer exist
-        this.index.embeddings = this.index.embeddings.filter(e => seenFiles.has(e.filePath));
-        this.index.keywords.forEach(k => {
-            k.locations = k.locations.filter(l => seenFiles.has(l.filePath));
+        this.index.embeddings = this.index.embeddings.filter((e) => seenFiles.has(e.filePath));
+        this.index.keywords.forEach((k) => {
+            k.locations = k.locations.filter((l) => seenFiles.has(l.filePath));
         });
-        this.index.keywords = this.index.keywords.filter(k => k.locations.length > 0);
-        
+        this.index.keywords = this.index.keywords.filter((k) => k.locations.length > 0);
+
         this.saveIndex();
-        console.log(`Indexed ${sourceFiles.length} files. Current index: ${this.index.embeddings.length} embeddings`);
+        console.log(
+            `Indexed ${sourceFiles.length} files. Current index: ${this.index.embeddings.length} embeddings`
+        );
     }
 
     /**
      * Remove all entries for a specific file from the index
      */
     private removeFileFromIndex(filePath: string): void {
-        this.index.embeddings = this.index.embeddings.filter(e => e.filePath !== filePath);
-        this.index.keywords.forEach(k => {
-            k.locations = k.locations.filter(l => l.filePath !== filePath);
+        this.index.embeddings = this.index.embeddings.filter((e) => e.filePath !== filePath);
+        this.index.keywords.forEach((k) => {
+            k.locations = k.locations.filter((l) => l.filePath !== filePath);
         });
     }
 
@@ -118,31 +123,31 @@ export class CodeIndexManager {
             const lines = content.split("\n");
             const contentHash = this.generateHash(content);
             const codeElements = this.extractCodeElements(content, lines);
-            
+
             for (const element of codeElements) {
                 const embedding: CodeEmbedding = {
                     filePath,
                     contentHash,
                     embedding: await this.generateEmbedding(element.content),
-                    type: element.type
+                    type: element.type,
                 };
-                
+
                 this.index.embeddings.push(embedding);
-                
+
                 const keywords = this.extractKeywords(element.content);
                 for (const keyword of keywords) {
-                    this.addKeyword(keyword, filePath, element.lineStart, element.lineEnd, element.type);
+                    this.addKeyword(
+                        keyword,
+                        filePath,
+                        element.lineStart,
+                        element.lineEnd,
+                        element.type
+                    );
                 }
             }
         } catch (error) {
             console.error(`Failed to index file ${filePath}:`, error);
         }
-    }
-
-        this.saveIndex();
-        console.log(
-            `Indexed ${sourceFiles.length} files with ${this.index.embeddings.length} embeddings`
-        );
     }
 
     /**
@@ -161,48 +166,6 @@ export class CodeIndexManager {
         } catch (error) {
             console.error("Failed to find source files:", error);
             return [];
-        }
-    }
-
-    /**
-     * Index a single file
-     */
-    private async indexFile(filePath: string): Promise<void> {
-        try {
-            const content = readFileSync(filePath, "utf-8");
-            const lines = content.split("\n");
-
-            // Generate content hash
-            const contentHash = this.generateHash(content);
-
-            // Extract functions, classes, and interfaces
-            const codeElements = this.extractCodeElements(content, lines);
-
-            // Create embeddings for each element
-            for (const element of codeElements) {
-                const embedding: CodeEmbedding = {
-                    filePath,
-                    contentHash,
-                    embedding: await this.generateEmbedding(element.content),
-                    type: element.type,
-                };
-
-                this.index.embeddings.push(embedding);
-
-                // Extract keywords
-                const keywords = this.extractKeywords(element.content);
-                for (const keyword of keywords) {
-                    this.addKeyword(
-                        keyword,
-                        filePath,
-                        element.lineStart,
-                        element.lineEnd,
-                        element.type
-                    );
-                }
-            }
-        } catch (error) {
-            console.error(`Failed to index file ${filePath}:`, error);
         }
     }
 
