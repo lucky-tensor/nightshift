@@ -19,6 +19,7 @@ This is the entry point for the Dark Factory codebase. All agents and developers
 
 - [Technical Challenges & Architecture](./docs/technical/1-technical-challenges.md): System architecture, constraints, and core technical decisions.
 - [Git-Brain Workflow](./docs/technical/2-git-brain.md): Specification for the "Reasoning Ledger" and commit metadata system.
+- [Git Branching Strategy](./docs/technical/3-git-branching-strategy.md): Access Paths, lineage naming, and pruning protocols.
 
 ### 4. Development (The Process)
 

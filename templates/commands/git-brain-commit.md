@@ -15,10 +15,12 @@ To create a commit that preserves the "Reasoning Ledger". The goal is not just t
 
 You need to generate three specific pieces of information:
 
-- **Prompt (The Trigger)**:
+- **Retroactive Prompt (The Trigger)**:
     - _Do not_ copy the full conversation history.
-    - _Do_ write a compressed, standalone instruction that would trigger this specific change.
-    - _Example_: "Update the `User` interface to add an optional `phoneNumber` field and update the validation schema."
+    - _Do_ write a prompt that would reproduce this result if run _now_, knowing what you know.
+    - _MUST_ reference specific existing .md files (templates, nags, methods) that explain the behavior.
+    - _CRITICAL_: Ensure referenced .md files exist in the _parent_ commit (before this change).
+    - _Example_: "Refactor the authentication logic using `templates/agents/security-engineer.md` and verify with `templates/nags/security-nag.md`."
 
 - **Expected Outcome (The Goal)**:
     - Describe the functional state after this commit.
@@ -44,7 +46,7 @@ The footer must be a valid JSON object wrapped in an HTML comment.
 <!--
 GIT_BRAIN_METADATA:
 {
-  "prompt": "<COMPRESSED_INSTRUCTION>",
+  "retroactive_prompt": "Update user schema using templates/agents/database-architect.md",
   "expectedOutcome": "<FUNCTIONAL_GOAL>",
   "contextSummary": "<ARCHITECTURAL_CONTEXT>",
   "diffHints": ["<HINT_1>", "<HINT_2>"],
@@ -56,7 +58,8 @@ GIT_BRAIN_METADATA:
 
 ## Checklist
 
-- [ ] Does the `prompt` describe _what to do_, not _what happened_?
+- [ ] Does the `retroactive_prompt` reference existing Markdown templates/docs?
+- [ ] Do all referenced files exist in the _parent_ commit?
 - [ ] Are `diffHints` specific enough to guide a future model?
 - [ ] Is the JSON valid?
 - [ ] Is the HTML comment syntax `<!-- ... -->` correct?

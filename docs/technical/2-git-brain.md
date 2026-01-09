@@ -23,8 +23,9 @@ Every automated commit must include a structured metadata block, invisible to ca
 
 ```typescript
 interface CommitMetadata {
-    // The "trigger": Minimal instruction to reproduce the work
-    prompt: string;
+    // The "trigger": A retroactive instruction that, if run now, would produce this result.
+    // MUST reference specific existing .md files (templates, nags, methods) present BEFORE this commit.
+    retroactive_prompt: string;
 
     // The "goal": Functional verification criteria
     expectedOutcome: string;
@@ -56,7 +57,7 @@ Uses the 'jsonwebtoken' library.
 <!--
 GIT_BRAIN_METADATA:
 {
-  "prompt": "Create a middleware to validate JWTs using the secret from env vars",
+  "retroactive_prompt": "Implement JWT middleware using templates/agents/security-engineer.md and enforcing templates/nags/security-nag.md",
   "expectedOutcome": "Requests without valid tokens should return 401",
   "contextSummary": "Securing API endpoints for phase 2",
   "agentId": "coder-alpha-1",
@@ -68,10 +69,10 @@ GIT_BRAIN_METADATA:
 
 ### 2.3 The Replay Protocol
 
-The "Replay" capability allows an agent to checkout a previous point in history and re-run the `prompt` against the current model.
+The "Replay" capability allows an agent to checkout a previous point in history and re-run the `retroactive_prompt` against the current model.
 
 1.  **Checkout**: Revert to the parent commit state.
-2.  **Inject**: Feed the `prompt` and `contextSummary` to the agent.
+2.  **Inject**: Feed the `retroactive_prompt` and `contextSummary` to the agent.
 3.  **Execute**: Allow the agent to generate code.
 4.  **Compare**: Measure the "Diff Fidelity" between the agent's new output and the stored commit diff.
 
