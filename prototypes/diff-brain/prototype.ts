@@ -112,7 +112,9 @@ class DiffBrain {
 
     extractMetadata(): DiffBrainMetadata {
         const msg = this.getLastCommitMessage();
-        const match = msg.split("<!-- DIFF_BRAIN_V1\n")[1].split("\n-->")[0];
+        const parts = msg.split("<!-- DIFF_BRAIN_V1\n");
+        const match = parts.length > 1 ? parts[1]?.split("\n-->")[0] : undefined;
+        if (!match) throw new Error("Metadata not found in commit message");
         return JSON.parse(match);
     }
 

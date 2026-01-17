@@ -75,6 +75,7 @@ export class PlanManager {
         this.updateProjectStatuses(projects);
 
         const plan: Plan = {
+            id: productId,
             productId,
             version: 1,
             createdAt: new Date().toISOString(),
@@ -91,7 +92,7 @@ export class PlanManager {
         // Update product metrics
         this.productManager.updateProduct(productId, {
             totalProjects: projects.length,
-            status: "in_progress",
+            status: "development",
         });
 
         // Generate PLAN.md

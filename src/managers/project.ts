@@ -6,13 +6,23 @@ import type { FactoryConfig, Project } from "../types";
 import { GitManager } from "./git";
 import { CodeIndexManager } from "./code-index";
 
-export class ProjectManager {
-    private factory: FactoryConfig;
-    private git: GitManager;
+import { FactoryManager } from "./factory";
 
-    constructor(factory: FactoryConfig) {
-        this.factory = factory;
-        this.git = new GitManager(factory.mainRepoPath);
+export class ProjectManager {
+    private factoryManager: FactoryManager;
+
+    constructor(factoryManager: FactoryManager) {
+        this.factoryManager = factoryManager;
+    }
+
+    private get factory(): FactoryConfig {
+        const f = this.factoryManager.getFactory();
+        if (!f) throw new Error("Factory not initialized");
+        return f;
+    }
+
+    private get git(): GitManager {
+        return new GitManager(this.factory.mainRepoPath);
     }
 
     /**

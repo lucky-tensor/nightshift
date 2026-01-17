@@ -79,7 +79,8 @@ const Dashboard = () => {
 
     const refreshProjects = (factory: FactoryConfig) => {
         try {
-            const pm = new ProjectManager(factory);
+            factoryManager.setFactory(factory);
+            const pm = new ProjectManager(factoryManager);
             const list = pm.listProjects();
             setProjects(list);
         } catch (err) {
@@ -101,7 +102,8 @@ const Dashboard = () => {
     const handleProjectCreate = async (name: string, description: string) => {
         if (!selectedFactory) return;
         try {
-            const pm = new ProjectManager(selectedFactory);
+            factoryManager.setFactory(selectedFactory);
+            const pm = new ProjectManager(factoryManager);
             await pm.createProject(name, `# Task: ${name}\n\n${description}`);
             refreshProjects(selectedFactory);
             setView("dashboard");

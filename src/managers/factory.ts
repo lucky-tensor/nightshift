@@ -120,6 +120,8 @@ export class FactoryManager {
             createdAt: new Date().toISOString(),
             budgetLimit: 100, // Default
             defaultModel: "gemini-pro",
+            outputDirectory: rootPath,
+            status: "active",
         };
 
         // 3. Save Local Config
@@ -152,5 +154,13 @@ export class FactoryManager {
 
     listKnownFactories() {
         return this.globalConfig.listFactories();
+    }
+
+    recordUsage(_cost: number, _tokens: number) {
+        // Placeholder for future implementation
+    }
+
+    recordProductCreated() {
+        // Placeholder
     }
 }
