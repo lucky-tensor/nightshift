@@ -5,7 +5,6 @@
  * and maintain consistency across the codebase.
  */
 
-import type { ProjectSession } from "../types";
 import { execSync } from "child_process";
 import chalk from "chalk";
 
@@ -23,7 +22,10 @@ import chalk from "chalk";
  * const fullId = resolveProjectId("abc123", projects);
  * ```
  */
-export function resolveProjectId(idOrPrefix: string, projects: ProjectSession[]): string {
+export function resolveProjectId<T extends { id: string }>(
+    idOrPrefix: string,
+    projects: T[]
+): string {
     // If already a full UUID (36 characters), return as-is
     if (idOrPrefix.length === 36) {
         return idOrPrefix;

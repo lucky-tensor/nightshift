@@ -40,7 +40,7 @@ export class Agent {
 
         // We use 'createOpencode' to launch the server and get a client in one step.
         // The @ts-ignore is currently necessary due to type mismatches in the alpha SDK version.
-        // @ts-ignore
+
         const { client, server } = await createOpencode({
             port: this.port,
             config: {

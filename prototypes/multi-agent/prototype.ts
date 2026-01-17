@@ -287,7 +287,7 @@ async function main() {
     console.log(`\n  Messages Exchanged: ${manager.getMessageCount()}`);
 
     console.log("\n  Decisions Made:");
-    result.decisions.forEach((d, i) => {
+    result.decisions.forEach((d: any, i: number) => {
         console.log(`     ${i + 1}. Q: ${d.question.slice(0, 40)}...`);
         console.log(`        A: ${d.answer}`);
     });

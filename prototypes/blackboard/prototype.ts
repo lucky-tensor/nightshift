@@ -238,7 +238,7 @@ class BlackboardAgent extends EventEmitter {
 
     checkForWork(): void {
         const available = this.blackboard.getForAgent(this.id);
-        if (available.length > 0 && this.state === "idle") {
+        if (available.length > 0 && available[0] && this.state === "idle") {
             this.workOn(available[0]);
         }
     }

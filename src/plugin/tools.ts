@@ -168,7 +168,7 @@ export function createTools(
 
                 const result = await runtime.runTask(
                     project,
-                    targetTask,
+                    { id: targetTask.id, name: targetTask.title },
                     args.subagent || "engineer"
                 );
 

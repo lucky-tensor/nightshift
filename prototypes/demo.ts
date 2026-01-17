@@ -14,7 +14,7 @@ import { execSync } from "child_process";
 import { GitManager } from "../src/managers/git";
 import { CodeIndexManager } from "../src/managers/code-index";
 import { MultiAgentManager } from "../src/managers/multi-agent";
-import { AgentContext } from "../src/types";
+import type { AgentContext } from "../src/types";
 
 const DEMO_DIR = "/tmp/nightshift-demo";
 
@@ -128,12 +128,13 @@ interface User {
     fs.writeFileSync(path.join(worktreePath, "src/auth.ts"), authCode);
 
     // Create Diff-Brain commit
-    await git.commitWithMetadata(worktreePath, "Add authentication service", {
+    await git.commitDiffBrain(worktreePath, "Add authentication service", {
         prompt: "Create AuthService class with login, token generation, and validation",
+        diffReconstructionHint: "Scaffold AuthService class",
         expectedOutcome: "JWT-based authentication system with 24h token expiry",
         contextSummary: "Adding core authentication feature for user management",
         agentId: "coder-alpha",
-        sessionId: "session-001",
+        filesChanged: ["src/auth.ts"],
     });
 
     console.log("✅ Created worktree with AuthService");
