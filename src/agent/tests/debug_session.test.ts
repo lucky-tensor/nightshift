@@ -1,19 +1,18 @@
-
-import { describe, it } from 'bun:test';
-import { Agent } from '../Agent';
+import { describe, it } from "bun:test";
+import { Agent } from "../Agent";
 
 // const MODEL_ID = 'google/gemini-2.0-flash-exp:free';
-const MODEL_ID = 'opencode/grok-code';
+const MODEL_ID = "opencode/grok-code";
 
-describe('Debug Session', () => {
-    it('should inspect session state', async () => {
+describe("Debug Session", () => {
+    it("should inspect session state", async () => {
         const agent = new Agent({ modelId: MODEL_ID, workingDirectory: process.cwd() });
         await agent.initialize();
 
         const sessionId = await agent.createSession();
         console.log("Session ID:", sessionId);
 
-        const stream = agent.run(sessionId, 'Hello?');
+        const stream = agent.run(sessionId, "Hello?");
 
         // Consume stream in background
         (async () => {
@@ -27,7 +26,7 @@ describe('Debug Session', () => {
         })();
 
         // Wait 5s
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise((r) => setTimeout(r, 5000));
 
         // Inspect Session
         // Access client directly (private but accessible in JS runtime if we cheat, or just use agent method if I add one)

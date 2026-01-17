@@ -1,9 +1,8 @@
+import { describe, it } from "bun:test";
+import { createOpencode } from "@opencode-ai/sdk";
 
-import { describe, it } from 'bun:test';
-import { createOpencode } from '@opencode-ai/sdk';
-
-describe('Debug Models', () => {
-    it('should list available models', async () => {
+describe("Debug Models", () => {
+    it("should list available models", async () => {
         const { client, server } = await createOpencode({ port: 0 });
 
         try {

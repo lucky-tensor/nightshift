@@ -164,7 +164,7 @@ export interface Product {
     status: "concept" | "development" | "released";
 }
 
-export interface Factory extends FactoryConfig {}
+export type Factory = FactoryConfig;
 
 // ============================================================================
 // ENHANCED GIT WORKFLOW (Brain of the Factory)
@@ -219,10 +219,13 @@ export interface CodeLocation {
 // MULTI-AGENT ARCHITECTURE
 // ============================================================================
 
+export type AgentType = "planner" | "coder" | "curator" | "tester" | "reviewer";
+export type AgentState = "idle" | "active" | "completed" | "failed";
+
 export interface AgentContext {
     id: string;
-    type: "planner" | "coder" | "curator" | "tester" | "reviewer";
-    state: "idle" | "active" | "completed" | "failed";
+    type: AgentType;
+    state: AgentState;
     currentTask?: string;
     sharedContext: SharedContext;
 }
@@ -232,7 +235,7 @@ export interface SharedContext {
     sessionId: string;
     codeIndex: CodeIndex;
     recentCommits: EnhancedCommitMessage[];
-    activeTasks: TaskStatus[];
+    activeTasks: TaskPrompt[];
     knowledgeBase: KnowledgeEntry[];
 }
 

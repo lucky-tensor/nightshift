@@ -121,9 +121,12 @@ export class CommitPolicyManager {
                 .map((line) => line.slice(3).trim());
 
             // Get diff statistics
-            const diffOutput = execSync(`git -C "${repoPath}" diff --stat HEAD 2>/dev/null || echo ""`, {
-                encoding: "utf-8",
-            }).trim();
+            const diffOutput = execSync(
+                `git -C "${repoPath}" diff --stat HEAD 2>/dev/null || echo ""`,
+                {
+                    encoding: "utf-8",
+                }
+            ).trim();
 
             // Parse additions and deletions from diff output
             let additions = 0;
@@ -239,7 +242,8 @@ export class CommitPolicyManager {
                 lastCommitHash: latestCommit?.[0] || "",
                 lastCommitTime: latestCommit?.[1] || "",
                 commitCount: commits.length,
-                averageLinesPerCommit: commits.length > 0 ? Math.round(totalLines / commits.length) : 0,
+                averageLinesPerCommit:
+                    commits.length > 0 ? Math.round(totalLines / commits.length) : 0,
             };
         } catch {
             return null;

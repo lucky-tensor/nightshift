@@ -181,7 +181,8 @@ export class ForwardPromptManager {
             });
         } catch (error) {
             // Ignore "nothing to commit" errors
-            const errorStr = (error as any).stderr?.toString() || (error as any).stdout?.toString() || "";
+            const errorStr =
+                (error as any).stderr?.toString() || (error as any).stdout?.toString() || "";
             if (!errorStr.includes("nothing to commit") && !errorStr.includes("no changes added")) {
                 throw new Error(`Failed to commit forward prompt: ${error}`);
             }
@@ -192,13 +193,9 @@ export class ForwardPromptManager {
      * Convert a ForwardPrompt to markdown format
      */
     toMarkdown(prompt: ForwardPrompt): string {
-        const nextStepsList = prompt.nextSteps
-            .map((step, i) => `${i + 1}. ${step}`)
-            .join("\n");
+        const nextStepsList = prompt.nextSteps.map((step, i) => `${i + 1}. ${step}`).join("\n");
 
-        const blockersList = prompt.blockers
-            .map((blocker) => `- ${blocker}`)
-            .join("\n");
+        const blockersList = prompt.blockers.map((blocker) => `- ${blocker}`).join("\n");
 
         return `# Forward Prompt
 
@@ -228,14 +225,14 @@ ${prompt.contextNotes || "_No context notes_"}
 ---
 <!-- FORWARD_PROMPT_METADATA
 ${JSON.stringify(
-            {
-                sessionId: prompt.sessionId,
-                agentId: prompt.agentId,
-                updatedAt: prompt.updatedAt,
-            },
-            null,
-            2
-        )}
+    {
+        sessionId: prompt.sessionId,
+        agentId: prompt.agentId,
+        updatedAt: prompt.updatedAt,
+    },
+    null,
+    2
+)}
 -->
 `;
     }
@@ -245,9 +242,7 @@ ${JSON.stringify(
      */
     fromMarkdown(content: string): ForwardPrompt {
         // Extract metadata from HTML comment
-        const metadataMatch = content.match(
-            /<!-- FORWARD_PROMPT_METADATA\s*([\s\S]*?)\s*-->/
-        );
+        const metadataMatch = content.match(/<!-- FORWARD_PROMPT_METADATA\s*([\s\S]*?)\s*-->/);
 
         let metadata: Partial<ForwardPrompt> = {};
         if (metadataMatch && metadataMatch[1]) {

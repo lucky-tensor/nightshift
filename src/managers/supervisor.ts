@@ -7,6 +7,7 @@
  * and running tasks. It acts as the heartbeat of the Nightshift.
  */
 
+/* eslint-disable no-undef */
 import { ProjectManager } from "./project";
 import { TaskManager } from "./task";
 import { FactoryManager } from "./factory";
@@ -19,7 +20,7 @@ import { CodeIndexManager } from "./code-index";
 import type { PolicyViolation } from "./commit-policy";
 
 export class FactorySupervisor {
-    private intervalId: Timer | null = null;
+    private intervalId: any = null;
     private isPolling = false;
     private commitPolicy: CommitPolicyManager;
     private policyViolations: Map<string, PolicyViolation> = new Map();

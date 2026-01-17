@@ -249,7 +249,9 @@ export class AgentRuntime {
             let context = "";
             try {
                 context = this.toolExecutor.execute("read", { filePath: "initial-context.md" });
-            } catch {}
+            } catch {
+                // ignore error if context file doesn't exist
+            }
 
             const systemPrompt = `You are an autonomous engineer working on: ${project.name}.
 Context:

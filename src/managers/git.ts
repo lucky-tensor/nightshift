@@ -304,19 +304,15 @@ export class GitManager {
      * @param limit - Maximum number of commits to return (default: 10)
      * @returns Array of enhanced commit messages with metadata
      */
-    getEnhancedCommitHistory(
-        worktreePath?: string,
-        limit: number = 10
-    ): EnhancedCommitMessage[] {
+    getEnhancedCommitHistory(worktreePath?: string, limit: number = 10): EnhancedCommitMessage[] {
         const path = worktreePath || this.baseRepoPath;
         const commits: EnhancedCommitMessage[] = [];
 
         try {
             // Get commit hashes
-            const hashesOutput = execSync(
-                `git -C "${path}" log --format="%H" -n ${limit}`,
-                { encoding: "utf-8" }
-            ).trim();
+            const hashesOutput = execSync(`git -C "${path}" log --format="%H" -n ${limit}`, {
+                encoding: "utf-8",
+            }).trim();
 
             if (!hashesOutput) return [];
 
@@ -328,10 +324,9 @@ export class GitManager {
                     commits.push(enhanced);
                 } else {
                     // Create a basic entry for non-nightshift commits
-                    const title = execSync(
-                        `git -C "${path}" log --format="%s" -n 1 ${hash}`,
-                        { encoding: "utf-8" }
-                    ).trim();
+                    const title = execSync(`git -C "${path}" log --format="%s" -n 1 ${hash}`, {
+                        encoding: "utf-8",
+                    }).trim();
 
                     commits.push({
                         title,

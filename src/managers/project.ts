@@ -1,12 +1,10 @@
 import { v4 as uuid } from "uuid";
 import { join } from "path";
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
-import { execSync } from "child_process";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync, readdirSync } from "fs";
 import { parse, stringify } from "yaml";
 import type { FactoryConfig, Project } from "../types";
 import { GitManager } from "./git";
 import { CodeIndexManager } from "./code-index";
-import { MultiAgentManager } from "./multi-agent";
 
 export class ProjectManager {
     private factory: FactoryConfig;
@@ -32,11 +30,13 @@ export class ProjectManager {
         const contextContent = parentContext || "# Initial Context\n\nNo context provided.";
         writeFileSync(contextPath, contextContent);
 
-        await this.git.commitWithMetadata(worktreePath, "chore: Initialize project context", {
+        await this.git.commitDiffBrain(worktreePath, "chore: Initialize project context", {
             prompt: `Initialize project ${name} with context`,
+            diffReconstructionHint: "Create initial-context.md file",
             expectedOutcome: "Project context file created and committed",
             contextSummary: "Project initialization",
             agentId: "system",
+            filesChanged: ["initial-context.md"],
         });
 
         // 3. Initialize Code Index
@@ -75,8 +75,9 @@ export class ProjectManager {
         // 2. Remove Metadata
         const path = this.getProjectStoragePath(projectId);
         if (existsSync(path)) {
-            const fs = require("fs");
-            fs.unlinkSync(path);
+            if (existsSync(path)) {
+                unlinkSync(path);
+            }
         }
     }
 
@@ -99,8 +100,7 @@ export class ProjectManager {
         // In a real app we'd use readdir and loop
         // keeping it simple for now, assuming we might need an index later
         // or just read all files
-        const fs = require("fs");
-        const files = fs.readdirSync(projectsDir).filter((f: string) => f.endsWith(".yaml"));
+        const files = readdirSync(projectsDir).filter((f: string) => f.endsWith(".yaml"));
         return files.map((f: string) => {
             const content = readFileSync(join(projectsDir, f), "utf-8");
             return parse(content) as Project;

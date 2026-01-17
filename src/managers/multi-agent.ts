@@ -5,15 +5,16 @@
  * Implements shared context and agent handoff mechanisms.
  */
 
-import {
+import type {
     AgentContext,
     SharedContext,
     AgentCollaboration,
     Message,
-    TaskStatus,
+    TaskPrompt,
 } from "../types/index";
 import { CodeIndexManager } from "./code-index.js";
 import { GitManager } from "./git.js";
+import { writeFileSync, readFileSync, existsSync } from "fs";
 
 export class MultiAgentManager {
     private agents: Map<string, AgentContext> = new Map();
@@ -154,6 +155,7 @@ export class MultiAgentManager {
         }
 
         const toAgent = availableAgents[0];
+        if (!toAgent) return false;
 
         // Prepare handoff context
         const handoffContext = this.prepareHandoffContext(fromAgent);
@@ -285,7 +287,7 @@ export class MultiAgentManager {
     async searchSharedContext(query: string): Promise<{
         commits: any[];
         code: any[];
-        tasks: TaskStatus[];
+        tasks: TaskPrompt[];
     }> {
         // Search recent commits
         const relevantCommits = this.sharedContext.recentCommits.filter(
@@ -346,9 +348,8 @@ export class MultiAgentManager {
      * Save collaboration log to disk
      */
     saveCollaborationLog(filePath: string): void {
-        const fs = require("fs");
         try {
-            fs.writeFileSync(filePath, JSON.stringify(this.collaborationLog, null, 2));
+            writeFileSync(filePath, JSON.stringify(this.collaborationLog, null, 2));
         } catch (error) {
             console.error("Failed to save collaboration log:", error);
         }
@@ -358,10 +359,9 @@ export class MultiAgentManager {
      * Load collaboration log from disk
      */
     loadCollaborationLog(filePath: string): void {
-        const fs = require("fs");
         try {
-            if (fs.existsSync(filePath)) {
-                const data = fs.readFileSync(filePath, "utf-8");
+            if (existsSync(filePath)) {
+                const data = readFileSync(filePath, "utf-8");
                 this.collaborationLog = JSON.parse(data);
             }
         } catch (error) {
