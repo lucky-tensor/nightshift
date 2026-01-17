@@ -38,8 +38,9 @@ function main() {
     }
 
     // Find incomplete nags
+    // Expects: { "nags": { "nag-name": "OK" | "NOK" } }
     const incomplete = Object.entries(status.nags || {})
-        .filter(([_, nag]) => !nag.completed)
+        .filter(([_, status]) => status !== 'OK')
         .map(([name]) => name);
 
     if (incomplete.length === 0) {
@@ -48,7 +49,7 @@ function main() {
 
     // Block commit
     const box = (text, pad = 56) => '║  ' + text.padEnd(pad) + '  ║';
-    
+
     console.error('');
     console.error('╔════════════════════════════════════════════════════════════╗');
     console.error('║            ❌ COMMIT BLOCKED - INCOMPLETE NAGS             ║');
@@ -62,7 +63,7 @@ function main() {
     console.error(box('  NIGHTSHIFT_BYPASS=1 git commit ...'));
     console.error('╚════════════════════════════════════════════════════════════╝');
     console.error('');
-    
+
     return 1;
 }
 

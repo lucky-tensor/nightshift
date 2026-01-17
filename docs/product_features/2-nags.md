@@ -11,26 +11,54 @@ Autonomous agents frequently suffer from "task amnesia" or "premature completion
 
 ## Solution: The "Nag" System
 
-"Nags" are specialized, mandatory checklists injected into the context at specific lifecycle events (usually just before a task is marked as `completed`). They act as a "Gateway of Last Resort."
+"Nags" are specialized, mandatory **single-task** interventions injected into the agent's context. They act as binary "Gateways of Last Resort."
 
-### How It Works
+### Core Philosophy
 
-1.  **Trigger**: Agent attempts to call `completeTask()` or `submitPR()`.
-2.  **Interception**: The system intercepts the call and checks if the relevant "Nag" has been satisfied.
-3.  **The Nag**: If unsatisfied, the system responds with a **Nag Template** (e.g., "You forgot to lint. Do it now.").
-4.  **Resolution**: The agent must perform the actions, check the boxes, and resubmit.
+1.  **Single Task**: A Nag represents ONE specific verification (e.g., "Is the build clean?"). It is not a sprawling checklist.
+2.  **Binary Protocol**: The agent must respond with exactly **"OK"** or **"NOK"**.
+    - **OK**: The condition is satisfied.
+    - **NOK**: The condition is failed.
+3.  **Hard Enforcement**: The OS-level Git hooks (`pre-commit`) parse this status. If the status is not "OK", the commit is mechanically blocked.
+
+### How It Works (The Protocol)
+
+The Nag system implements a strict **State Machine Protocol**.
+
+1.  **Challenge**: The system (or supervisor) injects a Nag Template and sets its status to "NOK" in `.nightshift/nag-status.json`.
+    ```json
+    { "nags": { "javascript-nag": "NOK" } }
+    ```
+2.  **Gate**: The agent attempts to `git commit`. The `pre-commit` hook reads the file. Seeing "NOK", it **blocks** the commit.
+3.  **Action**: The agent must:
+    - Read the Nag Template (Question).
+    - Perform the verification (Work).
+    - **Update the JSON File** (Answer).
+4.  **Acceptance**: The agent writes:
+    ```json
+    { "nags": { "javascript-nag": "OK" } }
+    ```
+5.  **Pass**: The next `git commit` attempt reads "OK" and allows the commit to proceed.
 
 ## Nag Templates
 
-Nags are stored as markdown templates in `templates/nags/`. Users can define custom nags for different languages, project types, or specific sensitive modules.
+Nags are stored as markdown templates in `templates/nags/`. Each template must specify its **Nag ID** and the exact JSON update command required.
 
-### Standard Nags
+### Types of Nags
 
-- **`javascript-nag.md`**: Enforces `npm test`, `npm run lint`, `npm run build`.
-- **`security-nag.md`**: Reminds agents to check for secrets in code, input validation, etc.
-- **`documentation-nag.md`**: Ensures docs were updated along with code.
+#### 1. Quality Nags
+Enforce code integrity.
+- **`javascript-nag.md`**: "Is the project building and passing tests?" (OK/NOK)
+
+#### 2. Memory Nags
+Enforce context continuity.
+- **`forward-prompt.md`**: "Have you updated the `forward-prompt.md` file with your latest state?" (OK/NOK)
+
+#### 3. Discipline Nags
+Enforce process hygiene.
+- **`commit-discipline-nag.md`**: "Are you committing too many files at once?" (OK/NOK)
 
 ## Integration
 
-- **CLI**: Users can manually "nag" an agent: `nightshift nag <agent-id> --template javascript`.
-- **Automated**: The `Supervisor` agent automatically applies nags based on the file types modified (e.g., if `.ts` files changed, apply `javascript-nag`).
+- **Manual**: User invokes: `nightshift nag <agent-id> --template javascript`.
+- **Automated Hooks**: The `.nightshift/hooks/pre-commit` script reads `.nightshift/nag-status.json` and prevents `git commit` until the active nag is "OK".
