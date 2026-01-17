@@ -1,32 +1,41 @@
-# Scripts Quick Start
+# Scripts
 
-## Overview
-
-This directory contains utility scripts for development, testing, and demonstration purposes.
+Utility scripts for development and release.
 
 ## Available Scripts
 
 ### `dev-install.sh`
 
-Sets up the development environment, likely installing dependencies and configuring git hooks.
-
-### `demonstrate-new-features.ts`
-
-A script used to showcase or verify recent additions to the codebase.
-
-### `test-agent-core.ts`
-
-A harness for testing the core agent loop in isolation without the full CLI overhead.
-
-## Usage
-
-Run scripts using `bun`:
+Sets up the development environment:
+- Installs dependencies
+- Configures git hooks
+- Prepares the workspace
 
 ```bash
-bun run scripts/demonstrate-new-features.ts
+./scripts/dev-install.sh
+```
+
+### `release.sh`
+
+Handles release packaging and versioning.
+
+```bash
+./scripts/release.sh
+```
+
+## Running Scripts
+
+Shell scripts:
+```bash
+./scripts/dev-install.sh
+```
+
+TypeScript scripts (if any):
+```bash
+bun run scripts/<script>.ts
 ```
 
 ## Navigation
 
 - [Return to Root](../START_HERE.md)
-- [Testing Strategy](../docs/development/3-testing.md)
+- [Development Docs](../docs/development/)
