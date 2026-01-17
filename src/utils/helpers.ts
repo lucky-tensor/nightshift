@@ -22,7 +22,10 @@ import chalk from "chalk";
  * const fullId = resolveProjectId("abc123", projects);
  * ```
  */
-export function resolveProjectId<T extends { id: string }>(idOrPrefix: string, projects: T[]): string {
+export function resolveProjectId<T extends { id: string }>(
+    idOrPrefix: string,
+    projects: T[]
+): string {
     // If already a full UUID (36 characters), return as-is
     if (idOrPrefix.length === 36) {
         return idOrPrefix;

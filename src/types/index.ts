@@ -257,14 +257,7 @@ export interface CodeLocation {
     filePath: string;
     lineStart: number;
     lineEnd: number;
-    type:
-    | "definition"
-    | "usage"
-    | "documentation"
-    | "function"
-    | "class"
-    | "interface"
-    | "comment";
+    type: "definition" | "usage" | "documentation" | "function" | "class" | "interface" | "comment";
 }
 
 // ============================================================================
