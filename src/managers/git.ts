@@ -7,11 +7,13 @@
 import { execSync } from "child_process";
 import { existsSync, mkdirSync, rmSync } from "fs";
 import { join, dirname } from "path";
-import { CommitMetadata, EnhancedCommitMessage } from "../types/index";
+import type { CommitMetadata, EnhancedCommitMessage } from "../types/index";
+import { HooksManager } from "./hooks";
 
 export class GitManager {
     private baseRepoPath: string;
     private worktreeBaseDir: string;
+    private hooksManager: HooksManager;
 
     /**
      * Create a new GitManager instance
@@ -22,6 +24,7 @@ export class GitManager {
         this.baseRepoPath = baseRepoPath;
         // Worktrees are created as siblings to the base repo
         this.worktreeBaseDir = dirname(baseRepoPath);
+        this.hooksManager = new HooksManager();
     }
 
     /**
@@ -33,6 +36,7 @@ export class GitManager {
      *
      * @param projectId - UUID of the project
      * @param baseBranch - Base branch to fork from (default: "master")
+     * @param installHooks - Whether to install nightshift hooks (default: true)
      * @returns Absolute path to the created worktree
      * @throws Error if worktree creation fails or already exists
      *
@@ -43,7 +47,11 @@ export class GitManager {
      * // Creates worktree at ../worktree_df_task_{projectId}/
      * ```
      */
-    async createWorktree(projectId: string, baseBranch: string = "master"): Promise<string> {
+    async createWorktree(
+        projectId: string,
+        baseBranch: string = "master",
+        installHooks: boolean = true
+    ): Promise<string> {
         const worktreeName = `worktree_df_task_${projectId}`;
         const worktreePath = join(this.worktreeBaseDir, worktreeName);
         const branchName = `ns/task/${projectId}`;
@@ -60,6 +68,11 @@ export class GitManager {
             execSync(
                 `git -C "${this.baseRepoPath}" worktree add "${worktreePath}" "${branchName}"`
             );
+
+            // Install nightshift hooks for nag enforcement
+            if (installHooks) {
+                await this.hooksManager.installHooks(worktreePath);
+            }
 
             return worktreePath;
         } catch (error) {
@@ -206,7 +219,7 @@ export class GitManager {
                 .trim();
 
             const metadata = JSON.parse(metadataJson);
-            const title = commitMessage.split("\n")[0];
+            const title = commitMessage.split("\n")[0] ?? "";
 
             return { title, metadata };
         } catch (error) {
@@ -282,5 +295,60 @@ export class GitManager {
     isClean(path: string): boolean {
         const status = execSync(`git -C "${path}" status --porcelain`).toString().trim();
         return status === "";
+    }
+
+    /**
+     * Get enhanced commit history with metadata
+     *
+     * @param worktreePath - Optional worktree path (defaults to base repo)
+     * @param limit - Maximum number of commits to return (default: 10)
+     * @returns Array of enhanced commit messages with metadata
+     */
+    getEnhancedCommitHistory(
+        worktreePath?: string,
+        limit: number = 10
+    ): EnhancedCommitMessage[] {
+        const path = worktreePath || this.baseRepoPath;
+        const commits: EnhancedCommitMessage[] = [];
+
+        try {
+            // Get commit hashes
+            const hashesOutput = execSync(
+                `git -C "${path}" log --format="%H" -n ${limit}`,
+                { encoding: "utf-8" }
+            ).trim();
+
+            if (!hashesOutput) return [];
+
+            const hashes = hashesOutput.split("\n").filter(Boolean);
+
+            for (const hash of hashes) {
+                const enhanced = this.extractCommitMetadata(path, hash);
+                if (enhanced) {
+                    commits.push(enhanced);
+                } else {
+                    // Create a basic entry for non-nightshift commits
+                    const title = execSync(
+                        `git -C "${path}" log --format="%s" -n 1 ${hash}`,
+                        { encoding: "utf-8" }
+                    ).trim();
+
+                    commits.push({
+                        title,
+                        metadata: {
+                            prompt: "",
+                            diffReconstructionHint: "",
+                            expectedOutcome: "",
+                            filesChanged: [],
+                            contextSummary: "",
+                        },
+                    });
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to get commit history: ${error}`);
+        }
+
+        return commits;
     }
 }

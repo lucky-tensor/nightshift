@@ -28,6 +28,19 @@ export { FactorySupervisor } from "./supervisor";
 export { TaskManager } from "./task";
 export { GlobalConfigManager } from "./global-config";
 
+// Agent Continuity & Quality
+export { ForwardPromptManager } from "./forward-prompt";
+export type { ForwardPrompt } from "./forward-prompt";
+export { HooksManager } from "./hooks";
+export type { NagStatus, NagCompletion, HookConfig } from "./hooks";
+export { CommitPolicyManager } from "./commit-policy";
+export type {
+    CommitPolicy,
+    PolicyViolation,
+    DiffStats,
+    CommitHistory,
+} from "./commit-policy";
+
 // Factory Config Types
 export type { FactoryConfig, Project, Session, Message } from "../types";
 
