@@ -26,5 +26,12 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Lint
+        run: bun run lint
+
+      - name: Format Check
+        run: bun run format:check
+
       - name: Type Check
-        run: bun run typecheck || true  # Don't fail on existing type issues
+        run: bun run typecheck
+
