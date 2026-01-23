@@ -31,9 +31,30 @@ docs/
 
 Create a `templates/` directory to store agent instructions.
 
-- **`templates/nags/`**: Create `javascript-nag.md` (or python/rust equivalent) with a checklist for building, testing, and linting.
+- **`templates/nags/`**: Create nag templates for quality enforcement
 - **`templates/commands/`**: Create `git-brain-commit.md` containing the protocol for "Reasoning Ledger" commits.
 
+<<<<<<< HEAD
+### 4. Install Nags (Quality Gates)
+
+Initialize the nags system for quality enforcement:
+
+```typescript
+// Detect project type and apply default nags
+await nags_defaults({});
+
+// Install git hooks
+await nags_install({});
+```
+
+The nags system will:
+
+- Auto-detect project type (Node.js, Rust, Python)
+- Apply appropriate linting/formatting nags
+- Install pre-commit (auto-fix) and pre-push (strict) hooks
+
+See [Nags Feature Documentation](../product_features/2-nags.md) for details.
+=======
 ### 4. Install Quality Gate Hooks
 
 Install git hooks that enforce nag completion before commits. This ensures agents cannot skip quality checks.
@@ -103,6 +124,7 @@ Git hooks can be pure JavaScript with `#!/usr/bin/env node` shebang - no shell w
 chmod +x .git/hooks/pre-commit
 chmod +x .git/hooks/commit-msg  # if using
 ```
+>>>>>>> origin/main
 
 ### 5. Update Navigation
 
