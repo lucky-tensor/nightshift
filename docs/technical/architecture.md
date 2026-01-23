@@ -179,3 +179,52 @@ The Nightshift CLI (`nightshift`) is a standalone TUI application built with Ink
 - [ ] End-to-end workflow tests
 - [ ] Integration tests
 - [ ] Documentation
+
+## Git Hooks System
+
+Nightshift provides automated git hooks to maintain code quality across all projects.
+
+### Hook Types
+
+| Hook       | Purpose           | Behavior                                 |
+| ---------- | ----------------- | ---------------------------------------- |
+| pre-commit | Auto-format code  | Non-blocking, fixes issues automatically |
+| pre-push   | Strict validation | Blocking, fails push if issues found     |
+
+### Hooks Manager
+
+Located in `src/managers/hooks.ts`, the HooksManager provides:
+
+- `installHook(hookName)` - Install a specific hook
+- `uninstallHook(hookName)` - Remove a hook
+- `listInstalledHooks()` - List currently installed hooks
+- `isHookInstalled(hookName)` - Check if a hook is installed
+
+### Hook Scripts
+
+Located in `scripts/hooks/`:
+
+- `pre-commit.js` - Auto-formats code based on project type
+- `pre-push.js` - Strict linting validation
+
+### Supported Project Types
+
+- **Node.js/Bun**: prettier, eslint, tsc
+- **Rust**: cargo fmt, cargo clippy
+- **Python**: ruff, black, isort, mypy
+
+### Agent Tools for Hook Management
+
+Agents can use these tools to manage hooks:
+
+- `nags_install` - Install git hooks and initialize default nags
+- `nags_uninstall` - Remove installed git hooks
+- `nags_status` - Check hook and nag configuration status
+- `nags_list` - List all configured nags
+- `nags_add_tool` - Add a tool-based nag (executes commands)
+- `nags_add_agent` - Add an agent-based nag (AI evaluation)
+- `nags_remove` - Remove a nag by ID
+- `nags_run` - Execute nags for testing
+- `nags_export` - Export nags configuration as JSON
+- `nags_import` - Import nags configuration
+- `nags_defaults` - Apply default nags for project type

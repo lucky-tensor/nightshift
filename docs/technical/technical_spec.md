@@ -88,12 +88,13 @@
 - Enforces acceptance criteria
 - Manages agent state
 
-#### Quality Gates
+#### Quality Gates (Nags System)
 
-- Runs tests
-- Executes linters/formatters
-- Validates acceptance criteria
-- Blocks incomplete work
+- Runs tool-based nags (linters, formatters, type checkers)
+- Executes agent-based nags (AI-powered quality evaluation)
+- Validates acceptance criteria via structured nag checks
+- Blocks commits/pushes when blocking nags fail
+- Supports pre-commit (auto-fix) and pre-push (strict) stages
 
 ## 2. Data Models
 
@@ -262,7 +263,86 @@ interface CostEntry {
 }
 ```
 
-### 2.4 Agent State Schema
+### 2.4 Nag Schema
+
+```typescript
+// Base nag interface
+interface BaseNag {
+    id: string;
+    name: string;
+    description: string;
+    stage: "pre-commit" | "pre-push";
+    type: "tool" | "agent";
+    enabled: boolean;
+    severity: "error" | "warning" | "info";
+    blocking: boolean;
+}
+
+// Tool-based nag - executes commands
+interface ToolNag extends BaseNag {
+    type: "tool";
+    command: string; // Command to execute
+    workingDirectory?: string; // Working directory
+    timeout?: number; // Timeout in seconds
+    successCriteria?: "exit_code_zero" | "output_contains" | "output_not_contains";
+    expectedOutput?: string; // Expected output for criteria
+}
+
+// Agent-based nag - evaluated by AI
+interface AgentNag extends BaseNag {
+    type: "agent";
+    prompt: string; // Evaluation prompt
+    agentId?: string; // Agent persona to use
+    evaluationCriteria?: string; // What to evaluate
+    maxTokens?: number; // Token limit
+}
+
+type Nag = ToolNag | AgentNag;
+
+// Nag execution result
+interface NagResult {
+    nagId: string;
+    status: "passed" | "failed" | "skipped" | "error";
+    evaluation?: "OK" | "NOK"; // For agent nags
+    message: string;
+    duration: number; // Milliseconds
+    output?: string;
+    timestamp: string;
+}
+
+// Nag execution report
+interface NagReport {
+    stage: "pre-commit" | "pre-push";
+    results: NagResult[];
+    summary: {
+        total: number;
+        passed: number;
+        failed: number;
+        skipped: number;
+        blocked: boolean;
+    };
+    duration: number; // Total execution time
+}
+
+// Nag configuration
+interface NagConfig {
+    version: string;
+    projectType: string; // "nodejs", "rust", "python", etc.
+    nags: Nag[];
+    defaults: {
+        preCommit: {
+            autoFix: boolean;
+            blocking: boolean;
+        };
+        prePush: {
+            strict: boolean;
+            blocking: boolean;
+        };
+    };
+}
+```
+
+### 2.5 Agent State Schema
 
 ```typescript
 interface AgentState {
@@ -821,6 +901,31 @@ interface GitManager {
     // Lineage
     getBranchLineage(branchName: string): Promise<string[]>;
     generateBranchName(parent: string, context: string): string;
+}
+
+// Nags Manager API
+interface NagsManager {
+    // Configuration
+    loadConfig(): NagConfig;
+    saveConfig(config: NagConfig): void;
+    detectProjectType(): string;
+    applyProjectDefaults(): void;
+
+    // Nag management
+    addNag(nag: Nag): void;
+    removeNag(id: string): boolean;
+    getNagsForStage(stage: "pre-commit" | "pre-push"): Nag[];
+
+    // Execution
+    executeStage(
+        stage: "pre-commit" | "pre-push",
+        client?: any,
+        agentRuntime?: { runTask: (project: any, task: any, subagent: string) => Promise<any> }
+    ): Promise<NagReport>;
+
+    // Import/Export
+    exportNags(): string;
+    importNags(jsonContent: string): void;
 }
 
 // Agent Runtime API

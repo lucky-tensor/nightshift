@@ -31,15 +31,35 @@ docs/
 
 Create a `templates/` directory to store agent instructions.
 
-- **`templates/nags/`**: Create `javascript-nag.md` (or python/rust equivalent) with a checklist for building, testing, and linting.
+- **`templates/nags/`**: Create nag templates for quality enforcement
 - **`templates/commands/`**: Create `git-brain-commit.md` containing the protocol for "Reasoning Ledger" commits.
 
-### 4. Update Navigation
+### 4. Install Nags (Quality Gates)
+
+Initialize the nags system for quality enforcement:
+
+```typescript
+// Detect project type and apply default nags
+await nags_defaults({});
+
+// Install git hooks
+await nags_install({});
+```
+
+The nags system will:
+
+- Auto-detect project type (Node.js, Rust, Python)
+- Apply appropriate linting/formatting nags
+- Install pre-commit (auto-fix) and pre-push (strict) hooks
+
+See [Nags Feature Documentation](../product_features/2-nags.md) for details.
+
+### 5. Update Navigation
 
 - Link all new docs in `START_HERE.md`.
 - Create `QUICK_START.md` files in major source directories (e.g., `src/`, `scripts/`) that link back to `START_HERE.md`.
 
-### 5. Git-Brain Protocol
+### 6. Git-Brain Protocol
 
 Inform the user that future commits should follow the **Git-Brain** standard:
 
