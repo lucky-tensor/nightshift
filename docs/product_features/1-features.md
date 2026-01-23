@@ -8,7 +8,7 @@ These features are available simply by adopting the file structure and templates
 
 - **Knowledge Base Structure**: `docs/` hierarchy (Vision, Features, Tech, Dev) for context grounding.
 - **Agent Personas**: Markdown templates defining specific roles (Planner, Coder, Curator).
-- **Nags**: Quality assurance checklists injected into the context window.
+- **Nags**: Single-task binary gateways (OK/NOK) enforced by git hooks.
 - **Git-Brain Protocol**: Commit message standards for reasoning preservation.
 
 ### Mode 2: Service (Active)

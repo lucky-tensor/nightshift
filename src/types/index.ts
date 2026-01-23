@@ -29,6 +29,8 @@ export interface FactoryConfig {
     // Configuration
     budgetLimit: number;
     defaultModel: string;
+    outputDirectory: string;
+    status: "active" | "maintenance" | "disabled";
 }
 
 // ============================================================================
@@ -99,11 +101,18 @@ export interface ProjectSession {
     id: string;
     projectId: string;
     messages: Message[];
+    status: "initializing" | "active" | "paused" | "completed" | "failed";
 }
 
 export interface SimpleFinanceState {
-    balance: number;
-    transactions: Transaction[];
+    totalCost: number;
+    totalTokens: number;
+    costByModel: Record<string, { tokens: number; cost: number }>;
+    currentModel: string;
+    lastUpdated: string;
+    // Optional legacy fields if needed
+    balance?: number;
+    transactions?: Transaction[];
 }
 
 export interface Transaction {
@@ -132,16 +141,28 @@ export interface TaskPrompt {
 
 export interface KnowledgeEntry {
     id: string;
+    productId: string;
+    projectId?: string;
+    mergedToMain?: boolean;
     title: string;
-    content: string;
-    tags: string[];
     type: "research" | "handbook" | "decision" | "reference";
+    // Metadata
+    filePath: string;
+    createdAt: string;
+    updatedAt: string;
+    tags?: string[];
 }
 
 export interface Plan {
     id: string;
-    projectId: string;
+    productId: string;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+    overview: string;
+    goals: string[];
     milestones: Milestone[];
+    projects: PlannedProject[];
 }
 
 export interface PlannedProject {
@@ -149,22 +170,46 @@ export interface PlannedProject {
     name: string;
     description: string;
     status: "pending" | "ready" | "in_progress" | "completed" | "blocked";
+    priority: number;
+    estimatedDays: number;
     dependencies: string[];
+    // Agent assignments
+    plannerAgent?: boolean;
+    coderAgent?: boolean;
+    curatorAgent?: boolean;
 }
 
 export interface Milestone {
     id: string;
-    title: string;
+    name: string;
+    description: string;
+    targetDate?: string;
     tasks: PlannedProject[];
 }
 
+export type ProductStatus = "concept" | "development" | "released" | "review" | "planning";
+
 export interface Product {
     id: string;
+    factoryId: string;
     name: string;
-    status: "concept" | "development" | "released";
+    description: string;
+    status: ProductStatus;
+    createdAt: string;
+    updatedAt: string;
+    rootPath: string; // Product root
+    repoPath: string; // Git repo root
+    prdPath: string; // Path to PRD.md
+    planPath: string; // Path to PLAN.md
+    remoteUrl?: string;
+    mainBranch?: string;
+    totalProjects: number;
+    completedProjects: number;
+    totalCost: number;
+    totalTokens: number;
 }
 
-export interface Factory extends FactoryConfig {}
+export type Factory = FactoryConfig;
 
 // ============================================================================
 // ENHANCED GIT WORKFLOW (Brain of the Factory)
@@ -212,17 +257,20 @@ export interface CodeLocation {
     filePath: string;
     lineStart: number;
     lineEnd: number;
-    type: "definition" | "usage" | "documentation";
+    type: "definition" | "usage" | "documentation" | "function" | "class" | "interface" | "comment";
 }
 
 // ============================================================================
 // MULTI-AGENT ARCHITECTURE
 // ============================================================================
 
+export type AgentType = "planner" | "coder" | "curator" | "tester" | "reviewer";
+export type AgentState = "idle" | "active" | "completed" | "failed";
+
 export interface AgentContext {
     id: string;
-    type: "planner" | "coder" | "curator" | "tester" | "reviewer";
-    state: "idle" | "active" | "completed" | "failed";
+    type: AgentType;
+    state: AgentState;
     currentTask?: string;
     sharedContext: SharedContext;
 }
@@ -232,7 +280,7 @@ export interface SharedContext {
     sessionId: string;
     codeIndex: CodeIndex;
     recentCommits: EnhancedCommitMessage[];
-    activeTasks: TaskStatus[];
+    activeTasks: TaskPrompt[];
     knowledgeBase: KnowledgeEntry[];
 }
 

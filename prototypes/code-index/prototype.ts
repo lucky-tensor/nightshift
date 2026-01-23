@@ -226,9 +226,13 @@ export class CodeIndex {
         let magB = 0;
 
         for (let i = 0; i < a.length; i++) {
-            dotProduct += a[i] * b[i];
-            magA += a[i] * a[i];
-            magB += b[i] * b[i];
+            const valA = a[i];
+            const valB = b[i];
+            if (valA === undefined || valB === undefined) continue;
+
+            dotProduct += valA * valB;
+            magA += valA * valA;
+            magB += valB * valB;
         }
 
         magA = Math.sqrt(magA);
@@ -382,7 +386,7 @@ async function main() {
     hybridResults.forEach((r) => {
         console.log(`     - ${r.name} (${r.type}) relevance: ${(r.relevance * 100).toFixed(1)}%`);
         if (r.highlights.length > 0) {
-            console.log(`       Highlight: "${r.highlights[0].slice(0, 60)}..."`);
+            console.log(`       Highlight: "${r.highlights[0]!.slice(0, 60)}..."`);
         }
     });
 

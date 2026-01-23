@@ -18,8 +18,10 @@ const Nightshift: Plugin = async ({ client, directory, project }) => {
 
         // 2. Initialize Managers
         console.log("[Nightshift] Initializing managers...");
-        const factoryManager = new FactoryManager(storageDir);
-        const projectManager = new ProjectManager(factoryManager, storageDir);
+        const factoryManager = new FactoryManager();
+        factoryManager.loadFactory(directory);
+
+        const projectManager = new ProjectManager(factoryManager);
 
         // 3. Initialize Supervisor (Background Worker)
         console.log("[Nightshift] Initializing supervisor...");

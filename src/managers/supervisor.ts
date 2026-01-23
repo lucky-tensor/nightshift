@@ -7,24 +7,31 @@
  * and running tasks. It acts as the heartbeat of the Nightshift.
  */
 
+/* eslint-disable no-undef */
 import { ProjectManager } from "./project";
 import { TaskManager } from "./task";
 import { FactoryManager } from "./factory";
+import { CommitPolicyManager } from "./commit-policy";
 import { logInfo, logWarning } from "../utils/helpers";
 import { writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { GitManager } from "./git";
 import { CodeIndexManager } from "./code-index";
+import type { PolicyViolation } from "./commit-policy";
 
 export class FactorySupervisor {
-    private intervalId: Timer | null = null;
+    private intervalId: any = null;
     private isPolling = false;
+    private commitPolicy: CommitPolicyManager;
+    private policyViolations: Map<string, PolicyViolation> = new Map();
 
     constructor(
         private client: any,
         private factoryManager: FactoryManager,
         private projectManager: ProjectManager
-    ) {}
+    ) {
+        this.commitPolicy = new CommitPolicyManager();
+    }
 
     /**
      * Start the factory heartbeat
@@ -81,7 +88,44 @@ export class FactorySupervisor {
             await this.checkProjectHealth(project);
             // Re-index project code periodically
             await this.refreshProjectIndex(project);
+            // Check commit policy
+            await this.checkCommitPolicy(project);
         }
+    }
+
+    /**
+     * Check commit policy for a project and log warnings if violated
+     */
+    private async checkCommitPolicy(project: any) {
+        try {
+            const violation = this.commitPolicy.checkPolicyViolation(project.worktreePath);
+
+            if (violation) {
+                // Store the violation for status display
+                this.policyViolations.set(project.id, violation);
+
+                // Log the warning
+                logWarning(
+                    `[Supervisor] Commit policy violation in "${project.name}": ${violation.message}`
+                );
+
+                // Generate reminder (could be injected into agent context)
+                const reminder = this.commitPolicy.generateCommitReminder(violation);
+                console.log(reminder);
+            } else {
+                // Clear any previous violation
+                this.policyViolations.delete(project.id);
+            }
+        } catch (error) {
+            console.error(`[Supervisor] Failed to check commit policy for ${project.name}:`, error);
+        }
+    }
+
+    /**
+     * Get current policy violations for all projects
+     */
+    getPolicyViolations(): Map<string, PolicyViolation> {
+        return this.policyViolations;
     }
 
     /**
@@ -136,10 +180,10 @@ export class FactorySupervisor {
 
                     const git = new GitManager(factory.mainRepoPath);
                     const history = git.getEnhancedCommitHistory(p.worktreePath, 1);
-                    const lastActivity =
-                        history.length > 0
-                            ? `${history[0].title} (${history[0].metadata.agentId})`
-                            : "No activity";
+                    const firstCommit = history[0];
+                    const lastActivity = firstCommit
+                        ? `${firstCommit.title} (${firstCommit.metadata?.agentId ?? "unknown"})`
+                        : "No activity";
 
                     md += `| ${p.name} | ${p.status} | \`${p.branchName}\` | ${stats.totalEmbeddings} emb / ${stats.totalKeywords} keys | ${lastActivity} |\n`;
                 }

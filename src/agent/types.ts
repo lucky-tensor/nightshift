@@ -1,11 +1,16 @@
-
 export interface AgentConfig {
     modelId: string;
     workingDirectory: string;
     port?: number;
 }
 
-export type AgentEventType = 'content_delta' | 'thinking_delta' | 'tool_call' | 'tool_result' | 'error' | 'done';
+export type AgentEventType =
+    | "content_delta"
+    | "thinking_delta"
+    | "tool_call"
+    | "tool_result"
+    | "error"
+    | "done";
 
 export interface AgentEvent {
     type: AgentEventType;
@@ -17,7 +22,7 @@ export interface AgentEvent {
 
 export interface Message {
     id: string;
-    role: 'user' | 'assistant' | 'tool';
+    role: "user" | "assistant" | "tool";
     content?: string;
     toolCalls?: any[];
     toolResults?: any[];

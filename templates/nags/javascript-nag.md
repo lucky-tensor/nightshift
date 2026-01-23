@@ -1,11 +1,21 @@
-# JavaScript/TypeScript Completion Nag
+# Nag: Clean Build Verification
 
-You have indicated that the task is complete. Before I accept this, you must verify that you have performed the following quality assurance steps.
+**Task**: Verify that the current codebase is in a deployable state.
 
-Please check these boxes. if you have not done them, do them NOW.
+**Context**:
+- **Build**: Run build command (e.g., `npm run build` or `tsc`) to check for compilation errors.
+- **Tests**: Run test suite (e.g., `npm test`) to ensure no regressions.
+- **Lint**: Run linter (e.g., `npm run lint`) to enforce style.
 
-- [ ] **Compilation/Build**: Ran the build command (e.g., `npm run build` or `tsc`) and confirmed zero errors.
-- [ ] **Testing**: Ran the test suite (e.g., `npm test`) and confirmed all relevant tests passed.
-- [ ] **Linting**: Ran the linter (e.g., `npm run lint`) and fixed all reported issues.
-- [ ] **Formatting**: Ran the formatter (e.g., `npm run format`) to ensure code style compliance.
-- [ ] **Self-Correction**: If any of the above failed, I have fixed the code and re-run the checks until they pass.
+**Instructions**:
+1. Perform the checks above.
+2. If ANY check fails, update `.nightshift/nag-status.json`:
+   ```json
+   { "nags": { "javascript-nag": "NOK" } }
+   ```
+   Then fix the issue and retry.
+3. If ALL checks pass, update `.nightshift/nag-status.json`:
+   ```json
+   { "nags": { "javascript-nag": "OK" } }
+   ```
+4. Proceed with your commit.

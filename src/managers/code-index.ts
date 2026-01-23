@@ -7,7 +7,7 @@
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
-import { CodeIndex, CodeEmbedding, KeywordIndex, CodeLocation } from "../types/index";
+import type { CodeIndex, CodeEmbedding, KeywordIndex, CodeLocation } from "../types/index";
 
 export class CodeIndexManager {
     private projectPath: string;
@@ -79,6 +79,7 @@ export class CodeIndexManager {
             const existingEmbeddings = this.index.embeddings.filter((e) => e.filePath === filePath);
             if (
                 existingEmbeddings.length > 0 &&
+                existingEmbeddings[0] &&
                 existingEmbeddings[0].contentHash === currentHash
             ) {
                 // Skip unchanged file
@@ -371,7 +372,7 @@ export class CodeIndexManager {
         filePath: string,
         lineStart: number,
         lineEnd: number,
-        type: "definition" | "usage" | "documentation"
+        type: CodeLocation["type"]
     ): void {
         let keywordIndex = this.index.keywords.find((k) => k.keyword === keyword);
 
@@ -430,9 +431,13 @@ export class CodeIndexManager {
         let magnitudeB = 0;
 
         for (let i = 0; i < a.length; i++) {
-            dotProduct += a[i] * b[i];
-            magnitudeA += a[i] * a[i];
-            magnitudeB += b[i] * b[i];
+            const valA = a[i];
+            const valB = b[i];
+            if (valA === undefined || valB === undefined) continue;
+
+            dotProduct += valA * valB;
+            magnitudeA += valA * valA;
+            magnitudeB += valB * valB;
         }
 
         magnitudeA = Math.sqrt(magnitudeA);
