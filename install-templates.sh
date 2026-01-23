@@ -76,14 +76,29 @@ case "$VENDOR" in
         fi
         cp "$TEMP_DIR/templates/installation/shims/claude/CLAUDE.md" .claude/CLAUDE.md
         echo -e "${GREEN}Installed: .claude/CLAUDE.md${NC}"
+        # Also install settings.json if it exists
+        if [ -f "$TEMP_DIR/templates/installation/shims/claude/settings.json" ]; then
+            if [ -f ".claude/settings.json" ]; then
+                echo -e "${YELLOW}Warning: .claude/settings.json exists. Backing up.${NC}"
+                mv .claude/settings.json .claude/settings.json.bak
+            fi
+            cp "$TEMP_DIR/templates/installation/shims/claude/settings.json" .claude/settings.json
+            echo -e "${GREEN}Installed: .claude/settings.json${NC}"
+        fi
         ;;
     cursor)
+        mkdir -p .cursor/rules
         if [ -f ".cursorrules" ]; then
             echo -e "${YELLOW}Warning: .cursorrules exists. Backing up.${NC}"
             mv .cursorrules .cursorrules.bak
         fi
         cp "$TEMP_DIR/templates/installation/shims/cursor/.cursorrules" .cursorrules
         echo -e "${GREEN}Installed: .cursorrules${NC}"
+        # Also install .mdc rule file
+        if [ -f "$TEMP_DIR/templates/installation/shims/cursor/nightshift.mdc" ]; then
+            cp "$TEMP_DIR/templates/installation/shims/cursor/nightshift.mdc" .cursor/rules/nightshift.mdc
+            echo -e "${GREEN}Installed: .cursor/rules/nightshift.mdc${NC}"
+        fi
         ;;
     gemini)
         if [ -f "GEMINI.md" ]; then
@@ -94,12 +109,13 @@ case "$VENDOR" in
         echo -e "${GREEN}Installed: GEMINI.md${NC}"
         ;;
     codex)
-        if [ -f "CODEX.md" ]; then
-            echo -e "${YELLOW}Warning: CODEX.md exists. Backing up.${NC}"
-            mv CODEX.md CODEX.md.bak
+        # Codex uses AGENTS.md (same as OpenCode)
+        if [ -f "AGENTS.md" ]; then
+            echo -e "${YELLOW}Warning: AGENTS.md exists. Backing up.${NC}"
+            mv AGENTS.md AGENTS.md.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/codex/CODEX.md" CODEX.md
-        echo -e "${GREEN}Installed: CODEX.md${NC}"
+        cp "$TEMP_DIR/templates/installation/shims/codex/AGENTS.md" AGENTS.md
+        echo -e "${GREEN}Installed: AGENTS.md${NC}"
         ;;
     *)
         echo -e "${RED}Unknown vendor: $VENDOR${NC}"
@@ -129,10 +145,12 @@ echo -e "${BLUE}Installed files:${NC}"
 echo "  .nightshift/          - Templates, commands, nags, hooks"
 case "$VENDOR" in
     opencode) echo "  opencode.json         - OpenCode configuration shim" ;;
-    claude)   echo "  .claude/CLAUDE.md     - Claude Code configuration shim" ;;
-    cursor)   echo "  .cursorrules          - Cursor configuration shim" ;;
+    claude)   echo "  .claude/CLAUDE.md     - Claude Code configuration shim"
+              echo "  .claude/settings.json - Claude Code settings" ;;
+    cursor)   echo "  .cursorrules          - Cursor configuration shim"
+              echo "  .cursor/rules/nightshift.mdc - Cursor rule file" ;;
     gemini)   echo "  GEMINI.md             - Gemini CLI configuration shim" ;;
-    codex)    echo "  CODEX.md              - Codex CLI configuration shim" ;;
+    codex)    echo "  AGENTS.md             - Codex CLI configuration shim" ;;
 esac
 echo "  .git/hooks/pre-commit - Nag enforcement hook"
 echo "  .git/hooks/commit-msg - Commit message validation hook"

@@ -124,53 +124,103 @@ The shim configures:
 
 ---
 
-## Claude Code (Coming Soon)
+## Claude Code
 
-Create `.claude/CLAUDE.md` that references `.nightshift/`:
+Install the Claude Code shim:
 
-```markdown
-# Nightshift Protocol
-
-You are operating under the Nightshift Protocol.
-
-CRITICAL: Read `.nightshift/AGENTS.md` immediately for full protocol.
-
-## Quick Reference
-
-- Persona: `.nightshift/agents/engineer.md`
-- Commands: `.nightshift/commands/`
-- Nags: `.nightshift/nags/`
-- State: `.nightshift/state/`
+```bash
+./install-templates.sh claude
 ```
+
+This installs:
+
+- `.claude/CLAUDE.md` - Protocol instructions for Claude
+- `.claude/settings.json` - Permissions configuration
+
+### Usage
+
+1. Start Claude Code: `claude`
+2. Claude will automatically read `.claude/CLAUDE.md`
+3. Ask: "Read .nightshift/AGENTS.md and initialize a session"
+
+### Key Features
+
+- Claude reads `CLAUDE.md` at startup automatically
+- The shim points Claude to the canonical `.nightshift/` templates
+- Settings.json grants read access to `.nightshift/**` and edit access to `.nightshift/state/**`
 
 ---
 
-## Cursor (Coming Soon)
+## Cursor
 
-Create `.cursorrules` that references `.nightshift/`:
+Install the Cursor shim:
 
-```markdown
-You are operating under the Nightshift Protocol.
-Read `.nightshift/AGENTS.md` for full protocol instructions.
+```bash
+./install-templates.sh cursor
 ```
+
+This installs:
+
+- `.cursorrules` - Basic protocol instructions
+- `.cursor/rules/nightshift.mdc` - Detailed rule file with glob pattern
+
+### Usage
+
+1. Open your project in Cursor
+2. Cursor will automatically read `.cursorrules` and rules in `.cursor/rules/`
+3. The agent should follow Nightshift Protocol automatically
 
 ---
 
-## Gemini CLI (Coming Soon)
+## Gemini CLI
 
-Create `GEMINI.md` that references `.nightshift/`:
+Install the Gemini CLI shim:
 
-```markdown
-# Nightshift Protocol
-
-Read `.nightshift/AGENTS.md` for full protocol.
+```bash
+./install-templates.sh gemini
 ```
+
+This installs:
+
+- `GEMINI.md` - Protocol instructions for Gemini CLI
+
+### Usage
+
+1. Start Gemini CLI: `gemini`
+2. Gemini will automatically read `GEMINI.md`
+3. Ask: "Read .nightshift/AGENTS.md and initialize a session"
+
+### Key Features
+
+- Gemini CLI reads `GEMINI.md` at startup automatically
+- Use `/save` for conversation checkpointing
+- Forward-prompt enables context continuity between sessions
 
 ---
 
-## OpenAI Codex (Coming Soon)
+## OpenAI Codex CLI
 
-Configuration TBD - will follow similar pattern.
+Install the Codex CLI shim:
+
+```bash
+./install-templates.sh codex
+```
+
+This installs:
+
+- `AGENTS.md` - Protocol instructions (Codex uses same file name as OpenCode)
+
+### Usage
+
+1. Start Codex: `codex`
+2. Codex will automatically read `AGENTS.md`
+3. Use appropriate approval mode based on nag status
+
+### Approval Modes
+
+- `codex --approval-mode suggest` - During development (safer)
+- `codex --approval-mode auto-edit` - For file changes with review
+- `codex --approval-mode full-auto` - Only after all nags are OK
 
 ---
 

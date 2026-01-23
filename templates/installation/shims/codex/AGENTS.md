@@ -53,19 +53,29 @@ You are operating under the **Nightshift Protocol** - a methodology for semi-aut
 
 ## Lazy Loading
 
-CRITICAL: Load files on a need-to-know basis:
+Load files on a need-to-know basis:
 
 - Read `.nightshift/agents/engineer.md` when you need persona guidance
 - Read `.nightshift/commands/git-brain-commit.md` when committing
 - Read `.nightshift/nags/javascript-nag.md` when running quality checks
 
-Do NOT preemptively load all files. Use lazy loading based on actual need.
+## Codex CLI Specific
 
-## Quick Commands
+### Approval Modes
 
-When asked to perform these operations:
+- Use `codex --approval-mode suggest` during development (safer)
+- Use `codex --approval-mode auto-edit` for file changes with review
+- Only use `codex --approval-mode full-auto` after all nags are OK
 
-- **"Start session"** or **"Initialize"**: Read forward-prompt and nag-status, summarize prior context
-- **"Run nags"** or **"Quality check"**: Run build/test/lint, update nag-status.json
-- **"Update forward prompt"**: Update `.nightshift/state/forward-prompt.md` with current state
-- **"Git-brain commit"**: Follow `.nightshift/commands/git-brain-commit.md` protocol
+### Before Full-Auto Mode
+
+Always verify nag status before enabling full-auto:
+
+```bash
+cat .nightshift/state/nag-status.json
+# Ensure all nags are "OK" before proceeding
+```
+
+### Session Continuity
+
+The forward-prompt in `.nightshift/state/forward-prompt.md` enables context continuity between Codex sessions. Update it regularly during work.
