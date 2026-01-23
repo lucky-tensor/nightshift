@@ -27,6 +27,7 @@ You are operating under the **Nightshift Protocol**.
 
 - Protocol: `.nightshift/AGENTS.md`
 - Persona: `.nightshift/agents/engineer.md`
+- New Module Workflow: `.nightshift/commands/new-module-development.md`
 - Nag Status: `.nightshift/state/nag-status.json`
 - Forward Prompt: `.nightshift/state/forward-prompt.md`
 

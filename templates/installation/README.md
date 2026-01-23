@@ -137,13 +137,14 @@ The shim configures:
 
 ### OpenCode Commands
 
-| Command              | Description                                          |
-| -------------------- | ---------------------------------------------------- |
-| `/session-start`     | Initialize a Nightshift session, read forward-prompt |
-| `/nag-check`         | Run all quality checks (build, test, lint)           |
-| `/update-nag-status` | Update nag-status.json after fixes                   |
-| `/git-brain-commit`  | Create commit with reasoning metadata                |
-| `/forward-prompt`    | Update forward-prompt with current state             |
+| Command              | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `/session-start`     | Initialize a Nightshift session, read forward-prompt   |
+| `/nag-check`         | Run all quality checks (build, test, lint)             |
+| `/update-nag-status` | Update nag-status.json after fixes                     |
+| `/git-brain-commit`  | Create commit with reasoning metadata                  |
+| `/forward-prompt`    | Update forward-prompt with current state               |
+| `/new-module`        | Start new module development (Plan → Stub → Implement) |
 
 ### Verify Installation
 

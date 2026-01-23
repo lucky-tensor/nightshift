@@ -57,6 +57,7 @@ Load files on a need-to-know basis:
 
 - Read `.nightshift/agents/engineer.md` when you need persona guidance
 - Read `.nightshift/commands/git-brain-commit.md` when committing
+- Read `.nightshift/commands/new-module-development.md` when starting new modules
 - Read `.nightshift/nags/javascript-nag.md` when running quality checks
 
 ## Codex CLI Specific

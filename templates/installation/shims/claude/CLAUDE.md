@@ -57,6 +57,7 @@ CRITICAL: Load files on a need-to-know basis:
 
 - Read `.nightshift/agents/engineer.md` when you need persona guidance
 - Read `.nightshift/commands/git-brain-commit.md` when committing
+- Read `.nightshift/commands/new-module-development.md` when starting new modules
 - Read `.nightshift/nags/javascript-nag.md` when running quality checks
 
 Do NOT preemptively load all files. Use lazy loading based on actual need.
@@ -69,3 +70,4 @@ When asked to perform these operations:
 - **"Run nags"** or **"Quality check"**: Run build/test/lint, update nag-status.json
 - **"Update forward prompt"**: Update `.nightshift/state/forward-prompt.md` with current state
 - **"Git-brain commit"**: Follow `.nightshift/commands/git-brain-commit.md` protocol
+- **"New module"** or **"Start new feature"**: Follow `.nightshift/commands/new-module-development.md` workflow (Plan → Stub → Implement)

@@ -57,6 +57,7 @@ Load files on a need-to-know basis:
 
 - Read `.nightshift/agents/engineer.md` when you need persona guidance
 - Read `.nightshift/commands/git-brain-commit.md` when committing
+- Read `.nightshift/commands/new-module-development.md` when starting new modules
 - Read `.nightshift/nags/javascript-nag.md` when running quality checks
 
 ## Quick Commands
@@ -67,6 +68,7 @@ When asked to perform these operations:
 - **"/nag-check"**: Run build/test/lint, update nag-status.json
 - **"/forward-prompt"**: Update `.nightshift/state/forward-prompt.md` with current state
 - **"/git-brain-commit"**: Follow `.nightshift/commands/git-brain-commit.md` protocol
+- **"/new-module"**: Follow `.nightshift/commands/new-module-development.md` workflow (Plan → Stub → Implement)
 
 ## Gemini CLI Specific
 
