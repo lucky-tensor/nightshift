@@ -47,6 +47,13 @@ echo -e "${YELLOW}Vendor:${NC} $VENDOR"
 echo -e "${YELLOW}Project:${NC} $PROJECT_ROOT"
 echo ""
 
+# Determine if we're running from within the Nightshift repository itself
+is_local_dev=false
+if [ -d "$PROJECT_ROOT/templates/installation/nightshift" ]; then
+    echo -e "${YELLOW}Detected local Nightshift repository. Using local templates instead of downloading.${NC}"
+    is_local_dev=true
+fi
+
 # Create a working directory WITHIN the project (not /tmp - agents may not have access)
 WORK_DIR="$PROJECT_ROOT/.nightshift-install-tmp"
 mkdir -p "$WORK_DIR"
@@ -57,18 +64,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Download the tarball from GitHub (NO git clone!)
-# This downloads a clean archive with no .git folder
-echo -e "${BLUE}Downloading Nightshift templates (via tarball, no git clone)...${NC}"
-TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${BRANCH}.tar.gz"
-
-if command -v curl &> /dev/null; then
-    curl -fsSL "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
-elif command -v wget &> /dev/null; then
-    wget -qO- "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
+if [ "$is_local_dev" = true ]; then
+    # Simply sync the templates to work dir for consistent pipeline
+    cp -r "$PROJECT_ROOT/templates" "$WORK_DIR/"
+    cp -r "$PROJECT_ROOT/scripts" "$WORK_DIR/" 2>/dev/null || true
 else
-    echo -e "${RED}Error: Neither curl nor wget found. Please install one of them.${NC}"
-    exit 1
+    # Download the tarball from GitHub (NO git clone!)
+    echo -e "${BLUE}Downloading Nightshift templates (via tarball, no git clone)...${NC}"
+    TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${BRANCH}.tar.gz"
+    
+    if command -v curl &> /dev/null; then
+        curl -fsSL "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
+    elif command -v wget &> /dev/null; then
+        wget -qO- "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
+    else
+        echo -e "${RED}Error: Neither curl nor wget found. Please install one of them.${NC}"
+        exit 1
+    fi
 fi
 
 # Verify the download worked
