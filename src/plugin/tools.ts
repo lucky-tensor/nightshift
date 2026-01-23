@@ -5,7 +5,8 @@ import { FactoryManager } from "../managers/factory";
 import { NagsManager } from "../managers/nags";
 import { AgentRuntime } from "../runtime/agent";
 import { resolveProjectId } from "../utils/helpers";
-import { readFileSync, existsSync, writeFileSync } from "fs";
+import { readFileSync, existsSync, writeFileSync, unlinkSync } from "fs";
+import { execSync } from "child_process";
 import { join } from "path";
 
 export function createTools(
@@ -201,8 +202,8 @@ export function createTools(
                 const projectType = nagsManager.detectProjectType();
                 const config = nagsManager.loadConfig();
 
-                let installed = [];
-                let skipped = [];
+                const installed: string[] = [];
+                const skipped: string[] = [];
 
                 if (!hook || hook === "pre-commit") {
                     const preCommitScript = join(
@@ -215,13 +216,12 @@ export function createTools(
                     );
                     if (existsSync(preCommitScript)) {
                         try {
-                            const fs = require("fs");
                             const targetHook = join(process.cwd(), ".git", "hooks", "pre-commit");
-                            if (existsSync(targetHook)) fs.unlinkSync(targetHook);
-                            fs.writeFileSync(targetHook, fs.readFileSync(preCommitScript));
-                            require("child_process").execSync(`chmod +x ${targetHook}`);
+                            if (existsSync(targetHook)) unlinkSync(targetHook);
+                            writeFileSync(targetHook, readFileSync(preCommitScript));
+                            execSync(`chmod +x ${targetHook}`);
                             installed.push("pre-commit");
-                        } catch (e) {
+                        } catch (_e) {
                             skipped.push("pre-commit");
                         }
                     } else {
@@ -240,13 +240,12 @@ export function createTools(
                     );
                     if (existsSync(prePushScript)) {
                         try {
-                            const fs = require("fs");
                             const targetHook = join(process.cwd(), ".git", "hooks", "pre-push");
-                            if (existsSync(targetHook)) fs.unlinkSync(targetHook);
-                            fs.writeFileSync(targetHook, fs.readFileSync(prePushScript));
-                            require("child_process").execSync(`chmod +x ${targetHook}`);
+                            if (existsSync(targetHook)) unlinkSync(targetHook);
+                            writeFileSync(targetHook, readFileSync(prePushScript));
+                            execSync(`chmod +x ${targetHook}`);
                             installed.push("pre-push");
-                        } catch (e) {
+                        } catch (_e) {
                             skipped.push("pre-push");
                         }
                     } else {
@@ -276,9 +275,11 @@ export function createTools(
                     const targetHook = join(process.cwd(), ".git", "hooks", hookName);
                     if (existsSync(targetHook)) {
                         try {
-                            require("fs").unlinkSync(targetHook);
+                            unlinkSync(targetHook);
                             removed.push(hookName);
-                        } catch (e) {}
+                        } catch {
+                            // ignore errors when removing hooks that don't exist
+                        }
                     }
                 };
 
