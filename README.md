@@ -35,7 +35,7 @@ You don't need to install any new software. You simply adopt the **Nightshift St
 
 **Copy/Paste this prompt to your Agent:**
 
-> Agent, I want to adopt the Nightshift methodology for this repository. Please read the bootstrapping guide at https://github.com/opencode-ai/nightshift/blob/main/docs/development/agent_bootstrap_instructions.md.
+> Agent, I want to adopt the Nightshift methodology for this repository. Please read the bootstrapping guide at https://github.com/lucky-tensor/nightshift/blob/main/agent_instructions.md
 
 ### 2. The Service (Advanced)
 
