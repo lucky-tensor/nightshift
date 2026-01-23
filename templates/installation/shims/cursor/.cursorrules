@@ -1,0 +1,27 @@
+# Nightshift Protocol
+
+You are operating under the Nightshift Protocol.
+
+CRITICAL: Read `.nightshift/AGENTS.md` for the complete protocol.
+
+## At Session Start
+- Read `.nightshift/state/forward-prompt.md` for prior context
+- Read `.nightshift/state/nag-status.json` for nag states
+
+## Before Every Commit
+- Run quality checks (build, test, lint)
+- Update `.nightshift/state/nag-status.json`
+- Fix any `NOK` nags before committing
+
+## Key Files
+- Protocol: `.nightshift/AGENTS.md`
+- Persona: `.nightshift/agents/engineer.md`
+- Git-Brain Commits: `.nightshift/commands/git-brain-commit.md`
+- Forward Prompt: `.nightshift/state/forward-prompt.md`
+
+## Principles
+1. Autonomy - Solve problems independently
+2. Safety - Never compromise code integrity
+3. Quality - Enforce standards via Nags
+4. Git Discipline - Work in provided branch
+5. Continuity - Maintain forward-prompt
