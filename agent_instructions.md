@@ -41,65 +41,57 @@ OS-level scripts that mechanically prevent rule-breaking.
 
 ---
 
-## 2. Installation Guide
+## 2. Installation Guide (Canonical)
 
-Since every AI tool (Claude, Cursor, Windsurf, generic LLM scripts) handles context differently, you must adapt the destination directories. **The goal is to make these files strictly visible and prioritized in the agent's system prompt or context window.**
+The repository provides a bootstrap script that installs the Nightshift Protocol into any project. This installs the `.nightshift/` directory (canonical documentation) and the vendor-specific shim.
 
-### Step 1: Install Git Hooks (Universal)
+### Step 1: Run the Bootstrap One-Liner
 
-This step is **mandatory** for all environments. It installs the "Enforcers".
-
-Run the following in your project root:
+Run this command in your project root:
 
 ```bash
-# 1. Install git hooks
-cp templates/hooks/pre-commit .git/hooks/
-cp templates/hooks/commit-msg .git/hooks/
-chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-
-# 2. Initialize the Git-Brain state directory
-mkdir -p .nightshift
-echo '{"sessionId":"manual","nags":{},"lastUpdated":""}' > .nightshift/nag-status.json
-
-# 3. Initialize the Forward Prompt (Memory Nag)
-cp templates/nags/forward-prompt.md .nightshift/forward-prompt.md
+# Replace [vendor] with: opencode, claude, cursor, gemini, or codex
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- [vendor]
 ```
 
-### Step 2: Install Templates (Tool-Specific)
+### Step 2: Protocol Files
 
-Copy the contents of `templates/agents`, `templates/nags`, and `templates/commands` to your tool's configuration location.
+This command creates the following structure in your project:
 
-#### For Claude Code (`.claude/`)
-Claude looks for context in `.claude/`.
-- Copy `templates/agents/*.md` -> `.claude/`
-- Copy `templates/nags/*.md` -> `.claude/nags/`
-- Copy `templates/commands/*.md` -> `.claude/commands/`
+| Location | Purpose |
+|----------|---------|
+| `.nightshift/AGENTS.md` | **The Core Protocol**. Read this first. |
+| `.nightshift/agents/` | Persona definitions (Engineer, Planner). |
+| `.nightshift/commands/` | SOPs for commits, nags, and session handoff. |
+| `.nightshift/nags/` | Quality gate definitions (checks). |
+| `.nightshift/hooks/` | Bash scripts for pre-commit enforcement. |
+| `.nightshift/state/` | Runtime memory (Forward Prompt, Nag Status). |
 
-#### For Cursor (`.cursor/rules/`)
-Cursor uses `.mdc` files for rules.
-- Copy `templates/agents/engineer.md` -> `.cursor/rules/nightshift-engineer.mdc`
-- **Important**: Add the glob pattern `**/*` to the rule so it is always active.
+### Step 3: Git Hooks Enforcement
 
-#### For Custom Agents / Other (`.agent/` or similar)
-If you are building a custom agent or using a general tool:
-- Create a `.agent/` directory.
-- Copy all templates there: `cp -r templates/* .agent/`
-- **Instruction**: Pre-prompt your agent with:
-  > "You are running the Nightshift protocol. Read the context in `.agent/` immediately."
+The installer automatically links the hooks to `.git/hooks/`. These hooks prevent you from committing if any Quality Nag in `.nightshift/state/nag-status.json` is set to `"NOK"`.
 
 ---
 
-## 3. Verification
+## 3. Tool-Specific Shims
 
-To verify the installation is working:
+The shim connects your AI tool to the canonical `.nightshift/` directory.
 
-1. **Check the Brain**: Ask your agent "What are the 5 operating principles of the Nightshift Engineer?" (It should recite them from the Agent template).
-2. **Check the Enforcer (Block)**:
-   - Manually set a nag to "NOK": `echo '{"nags":{"test-nag":"NOK"}}' > .nightshift/nag-status.json`
-   - Try to commit: `git commit --allow-empty -m "test"`
-   - **Result**: The commit MUST fail.
+- **OpenCode**: `opencode.json` (created in root)
+- **Claude Code**: `.claude/CLAUDE.md`
+- **Cursor**: `.cursorrules`
+- **Gemini CLI**: `GEMINI.md`
 
-3. **Check the Resolution (Pass)**:
-   - Manually set the nag to "OK": `echo '{"nags":{"test-nag":"OK"}}' > .nightshift/nag-status.json`
-   - Retry commit: `git commit --allow-empty -m "test"`
-   - **Result**: The commit SHOULD succeed.
+---
+
+## 4. Verification
+
+To verify the installation:
+
+1. **Protocol Check**: Ask your agent: "What are the 5 operating principles of the Nightshift Engineer?"
+2. **Nag Block Check**:
+   - Set a nag to NOK: `echo '{"nags":{"test":"NOK"}}' > .nightshift/state/nag-status.json`
+   - Try to commit: `git commit --allow-empty -m "test"` (It should be blocked)
+3. **Nag Pass Check**:
+   - Set nag to OK: `echo '{"nags":{"test":"OK"}}' > .nightshift/state/nag-status.json`
+   - Try to commit again (It should pass)

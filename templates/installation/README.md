@@ -25,79 +25,45 @@ YOUR_PROJECT/
 
 ---
 
-## Quick Install (OpenCode)
+## Quick Install
+
+The easiest way to install Nightshift is via the bootstrap one-liner. This uses `git` to pull only the necessary templates without cluttering your project with the full Nightshift repository history.
 
 ```bash
-# 1. Clone Nightshift
-git clone https://github.com/lucky-tensor/nightshift.git /tmp/nightshift
+# Install for OpenCode (default)
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash
 
-# 2. Copy templates to your project
-cp -r /tmp/nightshift/templates/installation/nightshift .nightshift
+# Install for Claude Code
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- claude
 
-# 3. Copy the OpenCode shim
-cp /tmp/nightshift/templates/installation/shims/opencode.json opencode.json
+# Install for Cursor
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- cursor
+```
 
-# 4. Install git hooks
+## Manual Installation (Git-Sparse)
+
+If you prefer to run the commands manually, use this optimized git-sparse approach:
+
+```bash
+# 1. Clone templates to a temporary folder
+git clone --depth 1 --filter=blob:none --sparse https://github.com/lucky-tensor/nightshift.git .ns_tmp
+
+# 2. Extract only what you need
+cd .ns_tmp
+git sparse-checkout set templates/installation/nightshift templates/installation/shims
+cd ..
+
+# 3. Move templates to project root (no .git directory copied)
+cp -r .ns_tmp/templates/installation/nightshift .nightshift
+cp .ns_tmp/templates/installation/shims/opencode.json opencode.json
+
+# 4. Cleanup
+rm -rf .ns_tmp
+
+# 5. Install Git Hooks
 cp .nightshift/hooks/pre-commit .git/hooks/pre-commit
 cp .nightshift/hooks/commit-msg .git/hooks/commit-msg
 chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-
-# 5. Start OpenCode
-opencode
-```
-
----
-
-## Detailed Installation
-
-### Step 1: Install Templates
-
-Copy the `.nightshift/` directory to your project root:
-
-```bash
-git clone https://github.com/lucky-tensor/nightshift.git /tmp/nightshift
-cp -r /tmp/nightshift/templates/installation/nightshift .nightshift
-```
-
-This gives you:
-
-| Directory               | Purpose                                    |
-| ----------------------- | ------------------------------------------ |
-| `.nightshift/AGENTS.md` | Core protocol - agent reads this first     |
-| `.nightshift/agents/`   | Persona templates (engineer, planner)      |
-| `.nightshift/commands/` | SOPs for git-brain commits, nag updates    |
-| `.nightshift/nags/`     | Quality gate definitions                   |
-| `.nightshift/hooks/`    | Git hooks source files                     |
-| `.nightshift/state/`    | Runtime state (forward-prompt, nag-status) |
-
-### Step 2: Install Git Hooks
-
-Git hooks enforce the nag protocol - you cannot commit if any nag is `NOK`.
-
-```bash
-cp .nightshift/hooks/pre-commit .git/hooks/pre-commit
-cp .nightshift/hooks/commit-msg .git/hooks/commit-msg
-chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-```
-
-**Bypass** (for human-supervised commits only):
-
-```bash
-NIGHTSHIFT_BYPASS=1 git commit -m "emergency fix"
-```
-
-### Step 3: Install Vendor Shim
-
-Choose your AI coding agent and install the appropriate shim.
-
----
-
-## OpenCode
-
-Copy the OpenCode shim to your project root:
-
-```bash
-cp /tmp/nightshift/templates/installation/shims/opencode.json opencode.json
 ```
 
 The shim configures:

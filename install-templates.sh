@@ -5,26 +5,22 @@
 # Installs the Nightshift methodology into the current project.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash
-#
-# Or:
-#   ./install-templates.sh [vendor]
-#
-# Vendors: opencode (default), claude, cursor, gemini, codex
+#   curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- [vendor]
 #
 
 set -e
+
+# Configuration
+REPO_URL="https://github.com/lucky-tensor/nightshift.git"
+VENDOR="${1:-opencode}"
+TEMP_DIR=".ns_install_$(date +%s)"
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-VENDOR="${1:-opencode}"
-NIGHTSHIFT_REPO="https://github.com/lucky-tensor/nightshift.git"
-TEMP_DIR=$(mktemp -d)
+NC='\033[0m'
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║              Nightshift Template Installer                 ║${NC}"
@@ -45,9 +41,12 @@ echo -e "${YELLOW}Vendor:${NC} $VENDOR"
 echo -e "${YELLOW}Project:${NC} $PROJECT_ROOT"
 echo ""
 
-# Clone Nightshift repo
-echo -e "${BLUE}Downloading Nightshift templates...${NC}"
-git clone --depth 1 "$NIGHTSHIFT_REPO" "$TEMP_DIR" 2>/dev/null
+# Bootstrap logic
+echo -e "${BLUE}Downloading Nightshift templates via git-sparse...${NC}"
+git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TEMP_DIR" 2>/dev/null
+cd "$TEMP_DIR"
+git sparse-checkout set templates/installation/nightshift templates/installation/shims
+cd ..
 
 # Copy .nightshift directory
 echo -e "${BLUE}Installing .nightshift/ templates...${NC}"
@@ -61,49 +60,33 @@ cp -r "$TEMP_DIR/templates/installation/nightshift" .nightshift
 echo -e "${BLUE}Installing $VENDOR shim...${NC}"
 case "$VENDOR" in
     opencode)
-        if [ -f "opencode.json" ]; then
-            echo -e "${YELLOW}Warning: opencode.json exists. Backing up to opencode.json.bak${NC}"
-            mv opencode.json opencode.json.bak
-        fi
+        [ -f "opencode.json" ] && mv opencode.json opencode.json.bak
         cp "$TEMP_DIR/templates/installation/shims/opencode.json" opencode.json
         echo -e "${GREEN}Installed: opencode.json${NC}"
         ;;
     claude)
         mkdir -p .claude
-        if [ -f ".claude/CLAUDE.md" ]; then
-            echo -e "${YELLOW}Warning: .claude/CLAUDE.md exists. Backing up.${NC}"
-            mv .claude/CLAUDE.md .claude/CLAUDE.md.bak
-        fi
+        [ -f ".claude/CLAUDE.md" ] && mv .claude/CLAUDE.md .claude/CLAUDE.md.bak
         cp "$TEMP_DIR/templates/installation/shims/claude/CLAUDE.md" .claude/CLAUDE.md
         echo -e "${GREEN}Installed: .claude/CLAUDE.md${NC}"
         ;;
     cursor)
-        if [ -f ".cursorrules" ]; then
-            echo -e "${YELLOW}Warning: .cursorrules exists. Backing up.${NC}"
-            mv .cursorrules .cursorrules.bak
-        fi
+        [ -f ".cursorrules" ] && mv .cursorrules .cursorrules.bak
         cp "$TEMP_DIR/templates/installation/shims/cursor/.cursorrules" .cursorrules
         echo -e "${GREEN}Installed: .cursorrules${NC}"
         ;;
     gemini)
-        if [ -f "GEMINI.md" ]; then
-            echo -e "${YELLOW}Warning: GEMINI.md exists. Backing up.${NC}"
-            mv GEMINI.md GEMINI.md.bak
-        fi
+        [ -f "GEMINI.md" ] && mv GEMINI.md GEMINI.md.bak
         cp "$TEMP_DIR/templates/installation/shims/gemini/GEMINI.md" GEMINI.md
         echo -e "${GREEN}Installed: GEMINI.md${NC}"
         ;;
     codex)
-        if [ -f "CODEX.md" ]; then
-            echo -e "${YELLOW}Warning: CODEX.md exists. Backing up.${NC}"
-            mv CODEX.md CODEX.md.bak
-        fi
+        [ -f "CODEX.md" ] && mv CODEX.md CODEX.md.bak
         cp "$TEMP_DIR/templates/installation/shims/codex/CODEX.md" CODEX.md
         echo -e "${GREEN}Installed: CODEX.md${NC}"
         ;;
     *)
         echo -e "${RED}Unknown vendor: $VENDOR${NC}"
-        echo "Valid options: opencode, claude, cursor, gemini, codex"
         rm -rf "$TEMP_DIR"
         exit 1
         ;;
@@ -114,8 +97,6 @@ echo -e "${BLUE}Installing git hooks...${NC}"
 cp .nightshift/hooks/pre-commit .git/hooks/pre-commit
 cp .nightshift/hooks/commit-msg .git/hooks/commit-msg
 chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-echo -e "${GREEN}Installed: .git/hooks/pre-commit${NC}"
-echo -e "${GREEN}Installed: .git/hooks/commit-msg${NC}"
 
 # Cleanup
 rm -rf "$TEMP_DIR"
@@ -125,30 +106,5 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║              Nightshift Installation Complete!             ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Installed files:${NC}"
-echo "  .nightshift/          - Templates, commands, nags, hooks"
-case "$VENDOR" in
-    opencode) echo "  opencode.json         - OpenCode configuration shim" ;;
-    claude)   echo "  .claude/CLAUDE.md     - Claude Code configuration shim" ;;
-    cursor)   echo "  .cursorrules          - Cursor configuration shim" ;;
-    gemini)   echo "  GEMINI.md             - Gemini CLI configuration shim" ;;
-    codex)    echo "  CODEX.md              - Codex CLI configuration shim" ;;
-esac
-echo "  .git/hooks/pre-commit - Nag enforcement hook"
-echo "  .git/hooks/commit-msg - Commit message validation hook"
-echo ""
-echo -e "${BLUE}Next steps:${NC}"
-case "$VENDOR" in
-    opencode)
-        echo "  1. Run: opencode"
-        echo "  2. Type: /session-start"
-        ;;
-    *)
-        echo "  1. Start your AI coding agent"
-        echo "  2. Ask it to read .nightshift/AGENTS.md"
-        ;;
-esac
-echo ""
-echo -e "${YELLOW}Bypass git hooks (human-supervised only):${NC}"
-echo "  NIGHTSHIFT_BYPASS=1 git commit -m \"message\""
+echo -e "Protocol definitions: ${BLUE}.nightshift/AGENTS.md${NC}"
 echo ""

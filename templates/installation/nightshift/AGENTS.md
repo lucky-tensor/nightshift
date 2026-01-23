@@ -81,6 +81,14 @@ All commits should include reasoning metadata. Use `/git-brain-commit` or follow
 | After major step | Update `forward-prompt.md`                 |
 | Complex workflow | Use SOP from `.nightshift/commands/`       |
 
+## Self-Bootstrapping & Updates
+
+If this project is missing the Nightshift Protocol, or if you need to update to the latest templates, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- [vendor]
+```
+
 ## Lazy Loading
 
 CRITICAL: Load files on a need-to-know basis:
