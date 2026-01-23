@@ -3,12 +3,14 @@
 # Nightshift Installation Script
 # 
 # Installs the Nightshift methodology into the current project.
+# Downloads templates via GitHub tarball - NO git clone required.
+# Creates a clean .nightshift/ folder with NO .git directory.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash
 #
-# Or:
-#   ./install-templates.sh [vendor]
+# Or with vendor:
+#   curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- claude
 #
 # Vendors: opencode (default), claude, cursor, gemini, codex
 #
@@ -23,8 +25,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 VENDOR="${1:-opencode}"
-NIGHTSHIFT_REPO="https://github.com/lucky-tensor/nightshift.git"
-TEMP_DIR=$(mktemp -d)
+GITHUB_REPO="lucky-tensor/nightshift"
+BRANCH="main"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║              Nightshift Template Installer                 ║${NC}"
@@ -45,27 +47,61 @@ echo -e "${YELLOW}Vendor:${NC} $VENDOR"
 echo -e "${YELLOW}Project:${NC} $PROJECT_ROOT"
 echo ""
 
-# Clone Nightshift repo
-echo -e "${BLUE}Downloading Nightshift templates...${NC}"
-git clone --depth 1 "$NIGHTSHIFT_REPO" "$TEMP_DIR" 2>/dev/null
+# Create a working directory WITHIN the project (not /tmp - agents may not have access)
+WORK_DIR="$PROJECT_ROOT/.nightshift-install-tmp"
+mkdir -p "$WORK_DIR"
 
-# Copy .nightshift directory
+# Cleanup function - always remove temp dir
+cleanup() {
+    rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
+
+# Download the tarball from GitHub (NO git clone!)
+# This downloads a clean archive with no .git folder
+echo -e "${BLUE}Downloading Nightshift templates (via tarball, no git clone)...${NC}"
+TARBALL_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${BRANCH}.tar.gz"
+
+if command -v curl &> /dev/null; then
+    curl -fsSL "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
+elif command -v wget &> /dev/null; then
+    wget -qO- "$TARBALL_URL" | tar -xz -C "$WORK_DIR" --strip-components=1
+else
+    echo -e "${RED}Error: Neither curl nor wget found. Please install one of them.${NC}"
+    exit 1
+fi
+
+# Verify the download worked
+if [ ! -d "$WORK_DIR/templates/installation/nightshift" ]; then
+    echo -e "${RED}Error: Failed to download templates. Check your internet connection.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Download complete.${NC}"
+
+# Copy .nightshift directory (clean copy, absolutely no .git)
 echo -e "${BLUE}Installing .nightshift/ templates...${NC}"
 if [ -d ".nightshift" ]; then
     echo -e "${YELLOW}Warning: .nightshift/ already exists. Backing up to .nightshift.bak${NC}"
+    rm -rf .nightshift.bak
     mv .nightshift .nightshift.bak
 fi
-cp -r "$TEMP_DIR/templates/installation/nightshift" .nightshift
+cp -r "$WORK_DIR/templates/installation/nightshift" .nightshift
+
+# IMPORTANT: Ensure NO .git folder exists (tarball shouldn't have one, but be paranoid)
+rm -rf .nightshift/.git 2>/dev/null || true
+
+echo -e "${GREEN}Installed: .nightshift/ (clean, no .git)${NC}"
 
 # Install vendor shim
 echo -e "${BLUE}Installing $VENDOR shim...${NC}"
 case "$VENDOR" in
     opencode)
         if [ -f "opencode.json" ]; then
-            echo -e "${YELLOW}Warning: opencode.json exists. Backing up to opencode.json.bak${NC}"
+            echo -e "${YELLOW}Warning: opencode.json exists. Backing up.${NC}"
             mv opencode.json opencode.json.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/opencode.json" opencode.json
+        cp "$WORK_DIR/templates/installation/shims/opencode.json" opencode.json
         echo -e "${GREEN}Installed: opencode.json${NC}"
         ;;
     claude)
@@ -74,15 +110,14 @@ case "$VENDOR" in
             echo -e "${YELLOW}Warning: .claude/CLAUDE.md exists. Backing up.${NC}"
             mv .claude/CLAUDE.md .claude/CLAUDE.md.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/claude/CLAUDE.md" .claude/CLAUDE.md
+        cp "$WORK_DIR/templates/installation/shims/claude/CLAUDE.md" .claude/CLAUDE.md
         echo -e "${GREEN}Installed: .claude/CLAUDE.md${NC}"
-        # Also install settings.json if it exists
-        if [ -f "$TEMP_DIR/templates/installation/shims/claude/settings.json" ]; then
+        if [ -f "$WORK_DIR/templates/installation/shims/claude/settings.json" ]; then
             if [ -f ".claude/settings.json" ]; then
                 echo -e "${YELLOW}Warning: .claude/settings.json exists. Backing up.${NC}"
                 mv .claude/settings.json .claude/settings.json.bak
             fi
-            cp "$TEMP_DIR/templates/installation/shims/claude/settings.json" .claude/settings.json
+            cp "$WORK_DIR/templates/installation/shims/claude/settings.json" .claude/settings.json
             echo -e "${GREEN}Installed: .claude/settings.json${NC}"
         fi
         ;;
@@ -92,11 +127,10 @@ case "$VENDOR" in
             echo -e "${YELLOW}Warning: .cursorrules exists. Backing up.${NC}"
             mv .cursorrules .cursorrules.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/cursor/.cursorrules" .cursorrules
+        cp "$WORK_DIR/templates/installation/shims/cursor/.cursorrules" .cursorrules
         echo -e "${GREEN}Installed: .cursorrules${NC}"
-        # Also install .mdc rule file
-        if [ -f "$TEMP_DIR/templates/installation/shims/cursor/nightshift.mdc" ]; then
-            cp "$TEMP_DIR/templates/installation/shims/cursor/nightshift.mdc" .cursor/rules/nightshift.mdc
+        if [ -f "$WORK_DIR/templates/installation/shims/cursor/nightshift.mdc" ]; then
+            cp "$WORK_DIR/templates/installation/shims/cursor/nightshift.mdc" .cursor/rules/nightshift.mdc
             echo -e "${GREEN}Installed: .cursor/rules/nightshift.mdc${NC}"
         fi
         ;;
@@ -105,22 +139,20 @@ case "$VENDOR" in
             echo -e "${YELLOW}Warning: GEMINI.md exists. Backing up.${NC}"
             mv GEMINI.md GEMINI.md.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/gemini/GEMINI.md" GEMINI.md
+        cp "$WORK_DIR/templates/installation/shims/gemini/GEMINI.md" GEMINI.md
         echo -e "${GREEN}Installed: GEMINI.md${NC}"
         ;;
     codex)
-        # Codex uses AGENTS.md (same as OpenCode)
         if [ -f "AGENTS.md" ]; then
             echo -e "${YELLOW}Warning: AGENTS.md exists. Backing up.${NC}"
             mv AGENTS.md AGENTS.md.bak
         fi
-        cp "$TEMP_DIR/templates/installation/shims/codex/AGENTS.md" AGENTS.md
+        cp "$WORK_DIR/templates/installation/shims/codex/AGENTS.md" AGENTS.md
         echo -e "${GREEN}Installed: AGENTS.md${NC}"
         ;;
     *)
         echo -e "${RED}Unknown vendor: $VENDOR${NC}"
         echo "Valid options: opencode, claude, cursor, gemini, codex"
-        rm -rf "$TEMP_DIR"
         exit 1
         ;;
 esac
@@ -133,8 +165,7 @@ chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
 echo -e "${GREEN}Installed: .git/hooks/pre-commit${NC}"
 echo -e "${GREEN}Installed: .git/hooks/commit-msg${NC}"
 
-# Cleanup
-rm -rf "$TEMP_DIR"
+# Cleanup is handled by trap EXIT
 
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
@@ -142,7 +173,7 @@ echo -e "${GREEN}║              Nightshift Installation Complete!             
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BLUE}Installed files:${NC}"
-echo "  .nightshift/          - Templates, commands, nags, hooks"
+echo "  .nightshift/          - Templates, commands, nags, hooks (NO .git)"
 case "$VENDOR" in
     opencode) echo "  opencode.json         - OpenCode configuration shim" ;;
     claude)   echo "  .claude/CLAUDE.md     - Claude Code configuration shim"
@@ -161,9 +192,21 @@ case "$VENDOR" in
         echo "  1. Run: opencode"
         echo "  2. Type: /session-start"
         ;;
-    *)
-        echo "  1. Start your AI coding agent"
-        echo "  2. Ask it to read .nightshift/AGENTS.md"
+    claude)
+        echo "  1. Run: claude"
+        echo "  2. Say: Read .nightshift/AGENTS.md and initialize"
+        ;;
+    cursor)
+        echo "  1. Open project in Cursor"
+        echo "  2. Rules are loaded automatically"
+        ;;
+    gemini)
+        echo "  1. Run: gemini"
+        echo "  2. Say: Read .nightshift/AGENTS.md and initialize"
+        ;;
+    codex)
+        echo "  1. Run: codex"
+        echo "  2. AGENTS.md is loaded automatically"
         ;;
 esac
 echo ""

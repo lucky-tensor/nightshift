@@ -2,13 +2,34 @@
 
 This guide explains how to install the Nightshift methodology into any project using any AI coding agent.
 
+## Quick Install (Recommended)
+
+The install script downloads templates via GitHub tarball (no git clone required), ensuring a clean `.nightshift/` folder with no `.git` directory that could cause conflicts.
+
+```bash
+# OpenCode (default)
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash
+
+# Claude Code
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- claude
+
+# Cursor
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- cursor
+
+# Gemini CLI
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- gemini
+
+# OpenAI Codex CLI
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- codex
+```
+
 ## Architecture
 
 Nightshift uses a **canonical + shim** architecture:
 
 ```
 YOUR_PROJECT/
-├── .nightshift/              # Canonical templates (copied)
+├── .nightshift/              # Canonical templates (clean copy, NO .git)
 │   ├── AGENTS.md             # Core protocol rules
 │   ├── agents/               # Persona templates
 │   ├── commands/             # SOPs (Standard Operating Procedures)
@@ -23,40 +44,48 @@ YOUR_PROJECT/
 
 **The shim** is a vendor-specific config file that points the AI agent to the canonical `.nightshift/` templates.
 
+**Important**: The `.nightshift/` folder is a clean copy with NO `.git` directory, so it won't cause git conflicts or confusion in your project.
+
 ---
 
-## Quick Install (OpenCode)
+## For AI Agents: Bootstrap Instructions
+
+If you are an AI agent installing Nightshift, use the install script:
 
 ```bash
-# 1. Clone Nightshift
-git clone https://github.com/lucky-tensor/nightshift.git /tmp/nightshift
-
-# 2. Copy templates to your project
-cp -r /tmp/nightshift/templates/installation/nightshift .nightshift
-
-# 3. Copy the OpenCode shim
-cp /tmp/nightshift/templates/installation/shims/opencode.json opencode.json
-
-# 4. Install git hooks
-cp .nightshift/hooks/pre-commit .git/hooks/pre-commit
-cp .nightshift/hooks/commit-msg .git/hooks/commit-msg
-chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-
-# 5. Start OpenCode
-opencode
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash -s -- opencode
 ```
 
+**Do NOT use `git clone`** - this can cause:
+
+1. Access issues with temp directories
+2. Nested git repositories
+3. Git conflicts in the developer's project
+
+The install script downloads a tarball and extracts only what's needed.
+
 ---
 
-## Detailed Installation
+## Manual Installation
 
-### Step 1: Install Templates
+If you prefer to install manually without the script:
 
-Copy the `.nightshift/` directory to your project root:
+### Step 1: Download and Extract Templates
+
+Use the GitHub tarball (NO git clone - avoids nested .git issues):
 
 ```bash
-git clone https://github.com/lucky-tensor/nightshift.git /tmp/nightshift
-cp -r /tmp/nightshift/templates/installation/nightshift .nightshift
+# Download and extract to a temp location
+curl -fsSL https://github.com/lucky-tensor/nightshift/archive/refs/heads/main.tar.gz | tar -xz
+
+# Copy the .nightshift folder (clean, no .git)
+cp -r nightshift-main/templates/installation/nightshift .nightshift
+
+# Copy your vendor shim (example: OpenCode)
+cp nightshift-main/templates/installation/shims/opencode.json opencode.json
+
+# Clean up
+rm -rf nightshift-main
 ```
 
 This gives you:
@@ -94,10 +123,10 @@ Choose your AI coding agent and install the appropriate shim.
 
 ## OpenCode
 
-Copy the OpenCode shim to your project root:
+Install using the script (recommended):
 
 ```bash
-cp /tmp/nightshift/templates/installation/shims/opencode.json opencode.json
+curl -fsSL https://raw.githubusercontent.com/lucky-tensor/nightshift/main/install-templates.sh | bash
 ```
 
 The shim configures:
